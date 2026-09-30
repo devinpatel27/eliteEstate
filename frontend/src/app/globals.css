@@ -1,0 +1,984 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.965 0.006 264);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(0.995 0.002 264);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(0.995 0.002 264);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.94 0.008 247.896);
+  --secondary-foreground: oklch(0.34 0.07 261.3);
+  --muted: oklch(0.94 0.006 247.858);
+  --muted-foreground: oklch(0.48 0.025 264.364);
+  --accent: oklch(0.92 0.012 264.533);
+  --accent-foreground: oklch(0.34 0.07 261.3);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.88 0.008 264.533);
+  --input: oklch(0.88 0.008 264.533);
+  --ring: oklch(0.546 0.245 262.881);
+  --sidebar: oklch(0.975 0.004 264);
+  --sidebar-foreground: oklch(0.25 0.03 264.533);
+  --sidebar-primary: oklch(0.546 0.245 262.881);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.92 0.012 264.533);
+  --sidebar-accent-foreground: oklch(0.34 0.07 261.3);
+  --sidebar-border: oklch(0.88 0.008 264.533);
+  --sidebar-ring: oklch(0.546 0.245 262.881);
+}
+
+.dark {
+  --background: oklch(0.13 0.015 264.533);
+  --foreground: oklch(0.97 0.003 264.533);
+  --card: oklch(0.168 0.018 264.533);
+  --card-foreground: oklch(0.97 0.003 264.533);
+  --popover: oklch(0.168 0.018 264.533);
+  --popover-foreground: oklch(0.97 0.003 264.533);
+  --primary: oklch(0.623 0.214 259.815);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.22 0.025 264.533);
+  --secondary-foreground: oklch(0.85 0.02 264.533);
+  --muted: oklch(0.22 0.025 264.533);
+  --muted-foreground: oklch(0.65 0.02 264.533);
+  --accent: oklch(0.25 0.03 264.533);
+  --accent-foreground: oklch(0.85 0.02 264.533);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.623 0.214 259.815);
+  --sidebar: oklch(0.12 0.018 264.533);
+  --sidebar-foreground: oklch(0.85 0.02 264.533);
+  --sidebar-primary: oklch(0.623 0.214 259.815);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.22 0.025 264.533);
+  --sidebar-accent-foreground: oklch(0.85 0.02 264.533);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.623 0.214 259.815);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  button,
+  [role="button"],
+  a,
+  label[for],
+  select {
+    cursor: pointer;
+  }
+
+  input,
+  textarea {
+    cursor: text;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.75 0 0);
+    border-radius: 3px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: oklch(0.35 0 0);
+  }
+}
+
+/* Login page — premium interactive styles */
+@keyframes login-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+@keyframes login-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-fade-up {
+  animation: login-fade-up 0.6s ease-out forwards;
+}
+
+.login-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: login-float 12s ease-in-out infinite;
+}
+
+.login-bg-orb-1 {
+  top: -10%;
+  left: -5%;
+  width: 500px;
+  height: 500px;
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.login-bg-orb-2 {
+  top: 40%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: rgba(99, 102, 241, 0.2);
+  animation-delay: -4s;
+}
+
+.login-bg-orb-3 {
+  bottom: -10%;
+  left: 30%;
+  width: 350px;
+  height: 350px;
+  background: rgba(14, 165, 233, 0.15);
+  animation-delay: -8s;
+}
+
+.login-glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 24px 48px -12px rgba(0, 0, 0, 0.5),
+    0 0 80px -20px rgba(59, 130, 246, 0.15);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.login-glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 24px 48px -12px rgba(0, 0, 0, 0.5),
+    0 0 100px -20px rgba(59, 130, 246, 0.25);
+}
+
+.login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.2s ease;
+}
+
+.login-input-wrap:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.login-input-wrap-active {
+  border-color: rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  width: 1rem;
+  height: 1rem;
+  color: rgb(100 116 139);
+  transition: color 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-input-wrap-active .login-input-icon,
+.login-input-wrap:hover .login-input-icon {
+  color: rgb(96 165 250);
+}
+
+.login-input {
+  height: 3rem !important;
+  padding-left: 2.75rem !important;
+  border: none !important;
+  background: transparent !important;
+  color: white !important;
+  box-shadow: none !important;
+  ring: none !important;
+}
+
+.login-input::placeholder {
+  color: rgb(100 116 139);
+}
+
+.login-input:focus-visible {
+  outline: none !important;
+  ring: none !important;
+  box-shadow: none !important;
+}
+
+.login-submit-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  transition: all 0.2s ease !important;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5);
+  filter: brightness(1.08);
+}
+
+.login-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+/* ─── CRM App Design System ─── */
+.crm-shell {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(99, 102, 241, 0.06), transparent),
+    oklch(0.955 0.008 264);
+}
+
+.dark .crm-shell {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.14), transparent),
+    oklch(0.11 0.015 264);
+}
+
+html.crm-app,
+html.crm-app body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.crm-card {
+  background: oklch(0.995 0.002 264);
+  border: 1px solid oklch(0.86 0.01 264);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.06), 0 4px 20px oklch(0 0 0 / 0.08);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.dark .crm-card {
+  background: oklch(0.155 0.018 264);
+  border-color: oklch(1 0 0 / 0.1);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.25), 0 4px 16px oklch(0 0 0 / 0.2);
+}
+
+.crm-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  transition: all 0.2s ease !important;
+}
+
+.crm-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+  filter: brightness(1.05);
+}
+
+.crm-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.crm-input {
+  height: 2.75rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid oklch(0.85 0.01 264) !important;
+  background: oklch(1 0 0) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.05) !important;
+  cursor: text !important;
+}
+
+.crm-input:hover:not(:disabled) {
+  border-color: oklch(0.75 0.05 264) !important;
+}
+
+.crm-input:focus-visible {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  outline: none !important;
+}
+
+.dark .crm-input {
+  background: oklch(0.2 0.02 264) !important;
+  border-color: oklch(1 0 0 / 0.1) !important;
+}
+
+.crm-select-trigger {
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid oklch(0.922 0.004 264) !important;
+  background: oklch(0.99 0 0) !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.04) !important;
+}
+
+.crm-select-trigger:hover:not(:disabled) {
+  border-color: oklch(0.75 0.05 264) !important;
+}
+
+.crm-select-trigger:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.dark .crm-select-trigger {
+  background: oklch(0.2 0.02 264) !important;
+  border-color: oklch(1 0 0 / 0.1) !important;
+}
+
+.crm-table-wrap {
+  border-radius: 1rem;
+  border: 1px solid oklch(0.922 0.004 264 / 0.8);
+  overflow: hidden;
+  background: oklch(1 0 0 / 0.9);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.04), 0 8px 24px oklch(0 0 0 / 0.04);
+}
+
+.dark .crm-table-wrap {
+  background: oklch(0.168 0.018 264 / 0.95);
+  border-color: oklch(1 0 0 / 0.08);
+}
+
+.crm-table-wrap thead tr {
+  background: oklch(0.97 0.003 264 / 0.8);
+}
+
+.dark .crm-table-wrap thead tr {
+  background: oklch(0.2 0.02 264 / 0.6);
+}
+
+.crm-table-wrap tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.crm-table-wrap tbody tr:hover {
+  background: oklch(0.97 0.003 264 / 0.5);
+}
+
+.dark .crm-table-wrap tbody tr:hover {
+  background: oklch(0.22 0.025 264 / 0.5);
+}
+
+.crm-dialog {
+  border-radius: 1.25rem !important;
+  border: 1px solid oklch(0.922 0.004 264 / 0.8) !important;
+  box-shadow: 0 24px 48px -12px oklch(0 0 0 / 0.2), 0 0 0 1px oklch(0 0 0 / 0.03) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.dark .crm-dialog {
+  border-color: oklch(1 0 0 / 0.1) !important;
+  box-shadow: 0 24px 48px -12px oklch(0 0 0 / 0.5) !important;
+}
+
+.crm-dialog-overlay {
+  background: oklch(0 0 0 / 0.6) !important;
+  backdrop-filter: blur(4px);
+}
+
+.crm-sidebar-nav-active {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  color: white !important;
+}
+
+.crm-sidebar-nav-item {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.crm-sidebar-nav-item:not(.crm-sidebar-nav-active):hover {
+  background: oklch(0.95 0.01 264);
+  transform: translateX(2px);
+}
+
+.dark .crm-sidebar-nav-item:not(.crm-sidebar-nav-active):hover {
+  background: oklch(0.22 0.025 264);
+}
+
+.crm-form-section {
+  border: 1px solid oklch(0.85 0.01 264);
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  background: oklch(0.985 0.002 264);
+}
+
+.dark .crm-form-section {
+  border-color: oklch(1 0 0 / 0.1);
+  background: oklch(0.16 0.02 264);
+}
+
+.crm-toolbar-input {
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  border-radius: 0.625rem !important;
+  border: 1px solid oklch(0.922 0.004 264) !important;
+  background: oklch(0.99 0 0) !important;
+  font-size: 0.8125rem !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+.dark .crm-toolbar-input {
+  background: oklch(0.2 0.02 264) !important;
+  border-color: oklch(1 0 0 / 0.1) !important;
+  color: oklch(0.97 0.003 264) !important;
+}
+
+.crm-toolbar-input:focus-visible {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.crm-table-toolbar {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.875rem;
+  border: 1px solid oklch(0.922 0.004 264 / 0.9);
+  background: oklch(1 0 0 / 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.crm-table-toolbar .crm-toolbar-input,
+.crm-table-toolbar .crm-select-trigger,
+.crm-table-toolbar .crm-date-trigger,
+.crm-table-toolbar .crm-filter-tabs {
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+}
+
+.crm-table-toolbar > div:first-child {
+  min-width: 0;
+  flex: 1 1 100%;
+}
+
+.crm-table-toolbar .crm-filter-tabs button {
+  height: calc(2.25rem - 0.25rem);
+}
+
+/* Filter tabs — consistent height outside table toolbar too */
+.crm-filter-tabs {
+  height: 2.25rem;
+  min-height: 2.25rem;
+}
+
+.crm-filter-tabs button {
+  height: calc(2.25rem - 0.25rem);
+}
+
+.crm-workboard-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid oklch(0.922 0.004 264 / 0.7);
+  background: oklch(0.98 0.002 264 / 0.6);
+  padding: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .crm-workboard-toolbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.dark .crm-workboard-toolbar {
+  border-color: oklch(1 0 0 / 0.1);
+  background: oklch(0.18 0.02 264 / 0.5);
+}
+
+.crm-back-link {
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.crm-back-link:hover {
+  background: oklch(0.96 0.008 264);
+  color: oklch(0.25 0.02 264);
+}
+
+.dark .crm-back-link:hover {
+  background: oklch(0.22 0.02 264);
+  color: oklch(0.95 0.003 264);
+}
+
+.crm-date-trigger {
+  border-radius: 0.75rem;
+  border: 1px solid oklch(0.922 0.004 264 / 0.9);
+  background: oklch(1 0 0 / 0.92);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.crm-date-trigger:hover {
+  border-color: oklch(0.55 0.18 264 / 0.35);
+  background: oklch(0.99 0.004 264);
+  box-shadow: 0 2px 8px -2px oklch(0.55 0.18 264 / 0.15);
+}
+
+.crm-date-trigger:focus-visible {
+  outline: none;
+  border-color: oklch(0.55 0.18 264 / 0.5);
+  box-shadow: 0 0 0 3px oklch(0.55 0.18 264 / 0.15);
+}
+
+.dark .crm-date-trigger {
+  border-color: oklch(1 0 0 / 0.12);
+  background: oklch(0.16 0.02 264 / 0.92);
+}
+
+/* ——— react-datepicker (modern) ——— */
+#crm-datepicker-root {
+  position: relative;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.crm-react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.crm-react-datepicker-popper .react-datepicker {
+  border: 1px solid oklch(0.922 0.004 264 / 0.85);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px -12px oklch(0.2 0.02 264 / 0.25);
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.dark .crm-react-datepicker-popper .react-datepicker {
+  border-color: oklch(1 0 0 / 0.12);
+  background: oklch(0.15 0.02 264);
+}
+
+.crm-react-datepicker,
+.crm-react-datepicker-inline .react-datepicker {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  font-family: inherit;
+}
+
+.crm-react-datepicker .react-datepicker__header,
+.crm-react-datepicker-inline .react-datepicker__header {
+  background: transparent;
+  border-bottom: none;
+  padding: 0.25rem 0.25rem 0;
+  border-radius: 0;
+}
+
+.dark .crm-react-datepicker .react-datepicker__header,
+.dark .crm-react-datepicker-inline .react-datepicker__header {
+  background: transparent;
+  border-bottom: none;
+}
+
+.crm-dp-header {
+  min-height: 2rem;
+}
+
+.crm-dp-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid oklch(0.922 0.004 264 / 0.7);
+  background: oklch(1 0 0 / 0.6);
+  color: oklch(0.4 0.02 264);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.crm-dp-nav-btn:hover:not(:disabled) {
+  border-color: oklch(0.55 0.18 264 / 0.4);
+  background: oklch(0.55 0.18 264 / 0.1);
+  color: oklch(0.55 0.18 264);
+}
+
+.crm-dp-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dark .crm-dp-nav-btn {
+  border-color: oklch(1 0 0 / 0.12);
+  background: oklch(0.2 0.02 264);
+  color: oklch(0.85 0.01 264);
+}
+
+.dark .crm-dp-nav-btn:hover:not(:disabled) {
+  border-color: oklch(0.55 0.18 264 / 0.35);
+  background: oklch(0.55 0.18 264 / 0.15);
+  color: oklch(0.75 0.12 264);
+}
+
+.crm-react-datepicker .react-datepicker__current-month,
+.crm-react-datepicker-inline .react-datepicker__current-month {
+  display: none;
+}
+
+.crm-react-datepicker .react-datepicker__day-names {
+  margin-top: 0.25rem;
+}
+
+.crm-react-datepicker .react-datepicker__day-name {
+  width: 2.25rem;
+  line-height: 2rem;
+  margin: 0.125rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(0.55 0.02 264);
+}
+
+.crm-react-datepicker .react-datepicker__month {
+  margin: 0.25rem 0.5rem 0.75rem;
+}
+
+.crm-react-datepicker .react-datepicker__day {
+  width: 2.25rem;
+  line-height: 2.25rem;
+  margin: 0.125rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: oklch(0.25 0.02 264);
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.crm-react-datepicker .react-datepicker__day:hover {
+  background: oklch(0.55 0.18 264 / 0.12) !important;
+  color: oklch(0.55 0.18 264) !important;
+  border-radius: 9999px;
+}
+
+.crm-react-datepicker .react-datepicker__day--selected,
+.crm-react-datepicker .react-datepicker__day--keyboard-selected {
+  background: linear-gradient(135deg, oklch(0.55 0.18 264), oklch(0.48 0.2 270)) !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 14px -3px oklch(0.55 0.18 264 / 0.55);
+  border-radius: 9999px;
+}
+
+.crm-react-datepicker .react-datepicker__day--selected:hover {
+  background: linear-gradient(135deg, oklch(0.52 0.19 264), oklch(0.45 0.21 270)) !important;
+  color: white !important;
+}
+
+.crm-react-datepicker .react-datepicker__day--in-range,
+.crm-react-datepicker .react-datepicker__day--in-selecting-range,
+.crm-react-datepicker-inline .react-datepicker__day--in-range,
+.crm-react-datepicker-inline .react-datepicker__day--in-selecting-range {
+  background: oklch(0.55 0.18 264 / 0.14) !important;
+  color: oklch(0.45 0.18 264) !important;
+  border-radius: 0;
+}
+
+.crm-react-datepicker .react-datepicker__day--range-start,
+.crm-react-datepicker .react-datepicker__day--range-end,
+.crm-react-datepicker .react-datepicker__day--selecting-range-start,
+.crm-react-datepicker .react-datepicker__day--selecting-range-end,
+.crm-react-datepicker-inline .react-datepicker__day--range-start,
+.crm-react-datepicker-inline .react-datepicker__day--range-end,
+.crm-react-datepicker-inline .react-datepicker__day--selecting-range-start,
+.crm-react-datepicker-inline .react-datepicker__day--selecting-range-end {
+  background: linear-gradient(135deg, oklch(0.55 0.18 264), oklch(0.48 0.2 270)) !important;
+  color: white !important;
+  border-radius: 9999px;
+}
+
+.crm-react-datepicker .react-datepicker__day--in-range:hover,
+.crm-react-datepicker .react-datepicker__day--in-selecting-range:hover,
+.crm-react-datepicker-inline .react-datepicker__day--in-range:hover,
+.crm-react-datepicker-inline .react-datepicker__day--in-selecting-range:hover {
+  background: oklch(0.55 0.18 264 / 0.22) !important;
+  color: oklch(0.45 0.18 264) !important;
+}
+
+.crm-react-datepicker-inline .react-datepicker__day--selected,
+.crm-react-datepicker-inline .react-datepicker__day--keyboard-selected {
+  background: linear-gradient(135deg, oklch(0.55 0.18 264), oklch(0.48 0.2 270)) !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 14px -3px oklch(0.55 0.18 264 / 0.55);
+  border-radius: 9999px;
+}
+
+.crm-react-datepicker-inline .react-datepicker__day {
+  width: 2.25rem;
+  line-height: 2.25rem;
+  margin: 0.125rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: oklch(0.25 0.02 264);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.crm-react-datepicker-inline .react-datepicker__day:hover {
+  background: oklch(0.55 0.18 264 / 0.12) !important;
+  color: oklch(0.55 0.18 264) !important;
+  border-radius: 9999px;
+}
+
+.crm-react-datepicker-inline .react-datepicker__day--today {
+  font-weight: 700;
+  color: oklch(0.55 0.18 264);
+}
+
+.crm-react-datepicker-inline .react-datepicker__day--today.react-datepicker__day--range-start,
+.crm-react-datepicker-inline .react-datepicker__day--today.react-datepicker__day--range-end,
+.crm-react-datepicker-inline .react-datepicker__day--today.react-datepicker__day--selecting-range-start,
+.crm-react-datepicker-inline .react-datepicker__day--today.react-datepicker__day--selecting-range-end {
+  box-shadow: 0 4px 14px -3px oklch(0.55 0.18 264 / 0.55);
+}
+
+.crm-react-datepicker-inline .react-datepicker__day--today:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end):not(.react-datepicker__day--in-range) {
+  box-shadow: inset 0 0 0 1.5px oklch(0.55 0.18 264 / 0.35);
+}
+
+.crm-react-datepicker-range .react-datepicker {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.crm-react-datepicker .react-datepicker__day--today {
+  font-weight: 700;
+  color: oklch(0.55 0.18 264);
+  box-shadow: inset 0 0 0 1.5px oklch(0.55 0.18 264 / 0.35);
+  border-radius: 9999px;
+}
+
+.crm-react-datepicker .react-datepicker__day--today.react-datepicker__day--selected {
+  box-shadow: 0 4px 14px -3px oklch(0.55 0.18 264 / 0.55);
+}
+
+.crm-react-datepicker .react-datepicker__day--outside-month {
+  color: oklch(0.65 0.02 264 / 0.45);
+}
+
+.crm-react-datepicker .react-datepicker__day--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.crm-react-datepicker .react-datepicker__navigation {
+  display: none !important;
+}
+
+.crm-react-datepicker .react-datepicker__navigation:hover {
+  border-color: oklch(0.55 0.18 264 / 0.35);
+  background: oklch(0.97 0.006 264);
+}
+
+.crm-react-datepicker .react-datepicker__navigation-icon::before {
+  display: none;
+}
+
+.crm-react-datepicker .react-datepicker__navigation--previous {
+  display: none !important;
+}
+
+.crm-react-datepicker .react-datepicker__month-dropdown,
+.crm-react-datepicker .react-datepicker__year-dropdown,
+.crm-react-datepicker .react-datepicker__month-read-view,
+.crm-react-datepicker .react-datepicker__year-read-view {
+  display: none !important;
+}
+
+.dark .crm-react-datepicker .react-datepicker__day {
+  color: oklch(0.9 0.01 264);
+}
+
+.dark .crm-react-datepicker .react-datepicker__navigation {
+  background: oklch(0.2 0.02 264);
+  border-color: oklch(1 0 0 / 0.1);
+}
+
+.crm-table-wrap tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.crm-table-wrap tbody tr:hover {
+  background: oklch(0.97 0.004 264 / 0.65);
+}
+
+.dark .crm-table-wrap tbody tr:hover {
+  background: oklch(0.2 0.02 264 / 0.55);
+}
+
+.dark .crm-table-toolbar {
+  border-color: oklch(1 0 0 / 0.1);
+  background: oklch(0.16 0.02 264 / 0.85);
+}
+
+.crm-header {
+  background: oklch(1 0 0 / 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid oklch(0.922 0.004 264 / 0.8);
+}
+
+.dark .crm-header {
+  background: oklch(0.13 0.015 264 / 0.85);
+  border-bottom-color: oklch(1 0 0 / 0.08);
+}
+
+.crm-sidebar {
+  background: oklch(0.995 0.002 264);
+  border-right: 1px solid oklch(0.922 0.004 264 / 0.8);
+}
+
+.dark .crm-sidebar {
+  background: oklch(0.12 0.018 264);
+  border-right-color: oklch(1 0 0 / 0.08);
+}
+
+.crm-page-enter {
+  animation: crm-page-fade-in 0.25s ease-out;
+}
+
+@keyframes crm-page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[role='combobox'],
+.crm-select-trigger,
+button[data-radix-collection-item],
+.crm-sidebar-nav-item,
+.crm-table-wrap tbody tr {
+  cursor: pointer;
+}
+
+.crm-input,
+.crm-select-trigger,
+.crm-toolbar-input {
+  min-height: 2.25rem;
+}
+
+.crm-btn-interactive {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.crm-btn-interactive:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.crm-btn-primary.crm-btn-interactive:hover:not(:disabled) {
+  box-shadow: 0 6px 16px -4px rgba(59, 130, 246, 0.45);
+}
+
+button.crm-btn-interactive[class*='outline']:hover:not(:disabled) {
+  background: oklch(0.97 0.004 264 / 0.8);
+  border-color: oklch(0.55 0.18 264 / 0.35);
+}
+
+.dark button.crm-btn-interactive[class*='outline']:hover:not(:disabled) {
+  background: oklch(0.22 0.02 264 / 0.8);
+}
+
+@media print {
+  aside,
+  header,
+  nav {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .reports-layout {
+    gap: 1rem !important;
+  }
+
+  .crm-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+  }
+}
