@@ -85,7 +85,7 @@ export const seedAdmin = async (): Promise<void> => {
     const hashedPassword = await hashPassword(env.ADMIN_PASSWORD);
 
     await UserModel.create({
-      employeeId: 'EMP000',
+      employeeId: 'ELITE000',
       name: env.ADMIN_NAME,
       email: env.ADMIN_EMAIL,
       password: hashedPassword,
