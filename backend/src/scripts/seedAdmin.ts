@@ -43,6 +43,11 @@ export const seedAdmin = async (): Promise<void> => {
       }
     }
 
+    const legacyDemo = await UserModel.deleteMany({ email: 'demo@eliteestate.com' });
+    if (legacyDemo.deletedCount > 0) {
+      console.log(`Removed ${legacyDemo.deletedCount} legacy demo administrator account(s)`);
+    }
+
     const existingAdmin = await UserModel.findOne({ email: env.ADMIN_EMAIL }).select('+password');
 
     if (existingAdmin) {
