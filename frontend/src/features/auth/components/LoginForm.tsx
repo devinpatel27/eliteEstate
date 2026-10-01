@@ -34,7 +34,7 @@ export function LoginForm() {
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: 'demo@eliteestate.com', password: 'Demo@12345' },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = (values: LoginFormValues) => {
@@ -196,14 +196,10 @@ export function LoginForm() {
               </form>
             </Form>
 
-            <div className="mt-6 rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-slate-300">
-              <p className="font-semibold text-emerald-300">Demo workspace</p>
-              <p className="mt-1">demo@eliteestate.com · Demo@12345</p>
-            </div>
           </div>
 
           <p className="mt-8 text-center text-xs text-slate-600">
-            © {new Date().getFullYear()} Elite Estate. Demo workspace.
+            © {new Date().getFullYear()} Elite Estate. Internal use only.
           </p>
         </div>
       </div>
