@@ -8,6 +8,10 @@ import { LoginInput, ChangePasswordInput } from './auth.validator';
 
 export const authService = {
   login: async (data: LoginInput, ipAddress?: string) => {
+    if (data.email.trim().toLowerCase() === 'demo@eliteestate.com') {
+      throw new AppError('Invalid email or password', 401);
+    }
+
     const user = await authRepository.findByEmail(data.email);
 
     if (!user) {
