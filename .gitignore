@@ -10,8 +10,6 @@ build/
 out/
 
 # Environment files
-.env
-.env.local
 .env.*.local
 
 # Logs
@@ -27,7 +25,6 @@ yarn-error.log*
 Thumbs.db
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
