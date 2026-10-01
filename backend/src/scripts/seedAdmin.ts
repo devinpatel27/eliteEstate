@@ -64,21 +64,6 @@ export const seedAdmin = async (): Promise<void> => {
       }
 
       await UserModel.updateMany({}, { forcePasswordChange: false });
-
-      const demoAdmin = await UserModel.findOne({ email: 'demo@eliteestate.com' });
-      if (!demoAdmin) {
-        const demoHashed = await hashPassword('Demo@12345');
-        await UserModel.create({
-          employeeId: 'DEMO000',
-          name: 'Elite Estate Demo Admin',
-          email: 'demo@eliteestate.com',
-          password: demoHashed,
-          role: masterAdminRole._id,
-          status: 'active',
-          forcePasswordChange: false,
-          joiningDate: new Date(),
-        });
-      }
       return;
     }
 
@@ -96,21 +81,6 @@ export const seedAdmin = async (): Promise<void> => {
     });
 
     console.log(`✅ Master admin seeded: ${env.ADMIN_EMAIL}`);
-
-    const demoAdmin = await UserModel.findOne({ email: 'demo@eliteestate.com' });
-    if (!demoAdmin) {
-      const demoHashed = await hashPassword('Demo@12345');
-      await UserModel.create({
-        employeeId: 'DEMO000',
-        name: 'Elite Estate Demo Admin',
-        email: 'demo@eliteestate.com',
-        password: demoHashed,
-        role: masterAdminRole._id,
-        status: 'active',
-        forcePasswordChange: false,
-        joiningDate: new Date(),
-      });
-    }
 
     await UserModel.updateMany({}, { forcePasswordChange: false });
   } catch (error) {

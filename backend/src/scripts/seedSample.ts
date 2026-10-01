@@ -14,9 +14,9 @@ import { LeadAssignmentModel } from '../models/LeadAssignment.model';
 import { LeadFollowUpModel } from '../models/LeadFollowUp.model';
 import { LeadActivityModel } from '../models/LeadActivity.model';
 import { VisitModel } from '../models/Visit.model';
+import { env } from '../config/env';
 
-const DEMO_EMAIL = 'demo@eliteestate.com';
-const DEMO_PASSWORD = 'Demo@12345';
+const SEED_EMPLOYEE_PASSWORD = 'Employee@12345';
 
 const daysFromNow = (days: number, hour = 10) => {
   const date = new Date();
@@ -26,7 +26,7 @@ const daysFromNow = (days: number, hour = 10) => {
 };
 
 async function upsertUser(data: Record<string, unknown>, roleId: Types.ObjectId) {
-  const password = await hashPassword(DEMO_PASSWORD);
+  const password = await hashPassword(SEED_EMPLOYEE_PASSWORD);
   return UserModel.findOneAndUpdate(
     { email: data.email },
     {
@@ -41,7 +41,7 @@ async function upsertUser(data: Record<string, unknown>, roleId: Types.ObjectId)
   );
 }
 
-export const seedDemo = async () => {
+export const seedSample = async () => {
   await seedAdmin();
   const mastersReady =
     (await PropertyTypeModel.countDocuments()) >= 11 &&
@@ -49,21 +49,11 @@ export const seedDemo = async () => {
     (await PropertyAmenityModel.countDocuments()) >= 10;
   if (!mastersReady) await seedMasters();
 
-  const adminRole = await RoleModel.findOne({ roleName: 'master_admin' });
   const employeeRole = await RoleModel.findOne({ roleName: 'employee' });
-  if (!adminRole || !employeeRole) throw new Error('Required roles were not seeded');
+  if (!employeeRole) throw new Error('Required employee role was not seeded');
 
-  const demoAdmin = await upsertUser(
-    {
-      employeeId: 'DEMO000',
-      name: 'Elite Estate Demo Admin',
-      email: DEMO_EMAIL,
-      mobile: '9876500000',
-      city: 'Ahmedabad',
-      state: 'Gujarat',
-    },
-    adminRole._id
-  );
+  const admin = await UserModel.findOne({ email: env.ADMIN_EMAIL });
+  if (!admin) throw new Error('Elite Estate administrator was not seeded');
 
   const employeeRows = [
     ['ELITE101', 'Aarav Shah', 'aarav@eliteestate.com', '9876500101'],
@@ -95,11 +85,11 @@ export const seedDemo = async () => {
       { propertyCode: row.propertyCode },
       {
         ...row,
-        description: 'Synthetic demonstration inventory for Elite Estate CRM.',
+        description: 'Synthetic sample inventory for Elite Estate CRM.',
         country: 'India', state: 'Gujarat', city: 'Ahmedabad',
         amenities: amenities.map((item) => item._id), gallery: [], videos: [], floorPlans: [],
         publishOnWebsite: true, isFeatured: row.propertyCode === 'ELITE-P001', showPrice: true,
-        hideExactLocation: true, inquiryCount: 0, viewCount: 24, createdBy: demoAdmin._id, deletedAt: null,
+        hideExactLocation: true, inquiryCount: 0, viewCount: 24, createdBy: admin._id, deletedAt: null,
       },
       { upsert: true, new: true }
     ));
@@ -120,15 +110,15 @@ export const seedDemo = async () => {
         leadId, customerName, mobile, email: `${customerName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
         city: 'Ahmedabad', category: index === 2 ? 'rent_property' : 'buy_property', propertyType: propertyType._id,
         propertyConfiguration, leadSource: leadSource._id, budgetMin, budgetMax, preferredArea, priority, status,
-        initialRemark: 'Demo inquiry created for product walkthrough.', notes: [], assignedTo: assignedTo._id,
+        initialRemark: 'Sample inquiry created for initial workspace setup.', notes: [], assignedTo: assignedTo._id,
         assignedAt: daysFromNow(-12 + index), nextFollowUpDate: status === 'open' ? daysFromNow(index % 3) : undefined,
-        propertyId: properties[index % properties.length]._id, createdBy: demoAdmin._id, deletedAt: null,
+        propertyId: properties[index % properties.length]._id, createdBy: admin._id, deletedAt: null,
       });
     }
 
     let assignment = await LeadAssignmentModel.findOne({ leadId: lead._id, isCurrent: true });
     if (!assignment) {
-      assignment = await LeadAssignmentModel.create({ leadId: lead._id, assignedTo: assignedTo._id, assignedBy: demoAdmin._id, assignedAt: daysFromNow(-12 + index), isCurrent: true, sequence: 1 });
+      assignment = await LeadAssignmentModel.create({ leadId: lead._id, assignedTo: assignedTo._id, assignedBy: admin._id, assignedAt: daysFromNow(-12 + index), isCurrent: true, sequence: 1 });
       await LeadModel.findByIdAndUpdate(lead._id, { currentAssignmentId: assignment._id }, { new: true });
     }
 
@@ -138,19 +128,19 @@ export const seedDemo = async () => {
     }
 
     if (index === 0 && await VisitModel.countDocuments({ leadId: lead._id }) === 0) {
-      await VisitModel.create({ leadId: lead._id, assignmentId: assignment._id, type: 'property_visit', scheduledDate: daysFromNow(-1, 11), scheduledTime: '11:00', status: 'completed', remark: 'Demo property visit', source: 'manual', createdBy: assignedTo._id });
+      await VisitModel.create({ leadId: lead._id, assignmentId: assignment._id, type: 'property_visit', scheduledDate: daysFromNow(-1, 11), scheduledTime: '11:00', status: 'completed', remark: 'Sample property visit', source: 'manual', createdBy: assignedTo._id });
     }
   }
 
-  console.log(`Demo data ready. Login: ${DEMO_EMAIL}`);
+  console.log(`Sample data ready. Login: ${env.ADMIN_EMAIL}`);
 };
 
 if (require.main === module) {
   connectDatabase()
-    .then(seedDemo)
+    .then(seedSample)
     .then(disconnectDatabase)
     .catch(async (error) => {
-      console.error('Demo seed failed:', error);
+      console.error('Sample seed failed:', error);
       if (mongoose.connection.readyState) await disconnectDatabase();
       process.exit(1);
     });

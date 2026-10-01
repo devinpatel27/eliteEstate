@@ -15,7 +15,7 @@
     "render:build": "npm ci --include=dev --include=optional && npm run build",
     "render:start": "npm run render:build && npm start",
     "seed": "ts-node src/scripts/seedAdmin.ts",
-    "seed:demo": "ts-node src/scripts/seedDemo.ts",
+    "seed:sample": "ts-node src/scripts/seedSample.ts",
     "import:enquiries": "ts-node src/scripts/importEnquiries.ts",
     "migrate:sql-backup": "ts-node src/scripts/migrateSqlBackup.ts",
     "backfill:latest-nfd": "ts-node src/scripts/backfillLatestNfd.ts",

@@ -1,26 +1,27 @@
-# Elite Estate Demo Deployment
+# Elite Estate Deployment
 
-This repository contains the Elite Estate CRM demo application:
+This repository contains the Elite Estate CRM application:
 
 - `frontend/`: Next.js CRM interface
-- `backend/`: Express API and synthetic demo seed
+- `backend/`: Express API and optional synthetic sample seed
 
-## Demo data policy
+## Data isolation policy
 
-Do not connect this deployment to any production database. Use a new, empty
-database dedicated to Elite Estate. The demo seed contains only synthetic
-records and can be run repeatedly without creating duplicates.
+Use a dedicated Elite Estate database. Never reuse a database belonging to
+another customer or the EstateFlow demonstration deployment. The optional
+sample seed contains only synthetic records and can be run repeatedly without
+creating duplicates.
 
 ```bash
 cd backend
 npm ci
-npm run seed:demo
+npm run seed:sample
 ```
 
-Demo login:
+Administrator login is configured through the backend environment:
 
-- Email: `demo@eliteestate.com`
-- Password: `Demo@12345`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
 
 ## Backend environment
 
@@ -28,9 +29,9 @@ Demo login:
 DATABASE_URL=<dedicated Elite Estate database URL>
 MONGODB_URI=<same value when using MongoDB>
 JWT_SECRET=<strong random secret>
-ADMIN_NAME=Elite Estate Demo Admin
-ADMIN_EMAIL=demo@eliteestate.com
-ADMIN_PASSWORD=Demo@12345
+ADMIN_NAME=Elite Estate Admin
+ADMIN_EMAIL=admin@eliteestate.com
+ADMIN_PASSWORD=<strong unique password>
 FRONTEND_URL=<deployed frontend URL>
 WEBSITE_URL=<deployed website URL>
 ```
