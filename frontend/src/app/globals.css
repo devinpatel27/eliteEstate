@@ -45,27 +45,27 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(0.995 0.002 264);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.546 0.245 262.881);
+  --primary: oklch(0.52 0.14 158);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.94 0.008 247.896);
-  --secondary-foreground: oklch(0.34 0.07 261.3);
+  --secondary-foreground: oklch(0.31 0.05 158);
   --muted: oklch(0.94 0.006 247.858);
   --muted-foreground: oklch(0.48 0.025 264.364);
   --accent: oklch(0.92 0.012 264.533);
-  --accent-foreground: oklch(0.34 0.07 261.3);
+  --accent-foreground: oklch(0.31 0.05 158);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.88 0.008 264.533);
   --input: oklch(0.88 0.008 264.533);
-  --ring: oklch(0.546 0.245 262.881);
+  --ring: oklch(0.52 0.14 158);
   --sidebar: oklch(0.975 0.004 264);
   --sidebar-foreground: oklch(0.25 0.03 264.533);
-  --sidebar-primary: oklch(0.546 0.245 262.881);
+  --sidebar-primary: oklch(0.52 0.14 158);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.92 0.012 264.533);
-  --sidebar-accent-foreground: oklch(0.34 0.07 261.3);
+  --sidebar-accent-foreground: oklch(0.31 0.05 158);
   --sidebar-border: oklch(0.88 0.008 264.533);
-  --sidebar-ring: oklch(0.546 0.245 262.881);
+  --sidebar-ring: oklch(0.52 0.14 158);
 }
 
 .dark {
@@ -75,7 +75,7 @@
   --card-foreground: oklch(0.97 0.003 264.533);
   --popover: oklch(0.168 0.018 264.533);
   --popover-foreground: oklch(0.97 0.003 264.533);
-  --primary: oklch(0.623 0.214 259.815);
+  --primary: oklch(0.68 0.15 158);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.22 0.025 264.533);
   --secondary-foreground: oklch(0.85 0.02 264.533);
@@ -87,15 +87,15 @@
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.623 0.214 259.815);
+  --ring: oklch(0.68 0.15 158);
   --sidebar: oklch(0.12 0.018 264.533);
   --sidebar-foreground: oklch(0.85 0.02 264.533);
-  --sidebar-primary: oklch(0.623 0.214 259.815);
+  --sidebar-primary: oklch(0.68 0.15 158);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.22 0.025 264.533);
   --sidebar-accent-foreground: oklch(0.85 0.02 264.533);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --sidebar-ring: oklch(0.68 0.15 158);
 }
 
 @layer base {
@@ -142,12 +142,6 @@
 }
 
 /* Login page — premium interactive styles */
-@keyframes login-float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.05); }
-  66% { transform: translate(-20px, 20px) scale(0.95); }
-}
-
 @keyframes login-fade-up {
   from {
     opacity: 0;
@@ -163,39 +157,6 @@
   animation: login-fade-up 0.6s ease-out forwards;
 }
 
-.login-bg-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  animation: login-float 12s ease-in-out infinite;
-}
-
-.login-bg-orb-1 {
-  top: -10%;
-  left: -5%;
-  width: 500px;
-  height: 500px;
-  background: rgba(59, 130, 246, 0.25);
-}
-
-.login-bg-orb-2 {
-  top: 40%;
-  right: -10%;
-  width: 400px;
-  height: 400px;
-  background: rgba(99, 102, 241, 0.2);
-  animation-delay: -4s;
-}
-
-.login-bg-orb-3 {
-  bottom: -10%;
-  left: 30%;
-  width: 350px;
-  height: 350px;
-  background: rgba(14, 165, 233, 0.15);
-  animation-delay: -8s;
-}
-
 .login-glass-card {
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(24px);
@@ -204,7 +165,7 @@
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.05) inset,
     0 24px 48px -12px rgba(0, 0, 0, 0.5),
-    0 0 80px -20px rgba(59, 130, 246, 0.15);
+    0 0 80px -20px rgba(16, 185, 129, 0.14);
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
@@ -213,7 +174,7 @@
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
     0 24px 48px -12px rgba(0, 0, 0, 0.5),
-    0 0 100px -20px rgba(59, 130, 246, 0.25);
+    0 0 100px -20px rgba(16, 185, 129, 0.22);
 }
 
 .login-input-wrap {
@@ -232,9 +193,9 @@
 }
 
 .login-input-wrap-active {
-  border-color: rgba(59, 130, 246, 0.6);
-  background: rgba(59, 130, 246, 0.08);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: rgba(52, 211, 153, 0.62);
+  background: rgba(16, 185, 129, 0.08);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .login-input-icon {
@@ -250,7 +211,7 @@
 
 .login-input-wrap-active .login-input-icon,
 .login-input-wrap:hover .login-input-icon {
-  color: rgb(96 165 250);
+  color: rgb(110 231 183);
 }
 
 .login-input {
@@ -274,35 +235,35 @@
 }
 
 .login-submit-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
+  background: linear-gradient(135deg, #059669 0%, #0f766e 100%) !important;
   border: none !important;
   color: white !important;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.36);
   transition: all 0.2s ease !important;
 }
 
 .login-submit-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.48);
   filter: brightness(1.08);
 }
 
 .login-submit-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.36);
 }
 
 /* ─── CRM App Design System ─── */
 .crm-shell {
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(99, 102, 241, 0.06), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(5, 150, 105, 0.1), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(217, 119, 6, 0.05), transparent),
     oklch(0.955 0.008 264);
 }
 
 .dark .crm-shell {
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.14), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(5, 150, 105, 0.13), transparent),
     oklch(0.11 0.015 264);
 }
 

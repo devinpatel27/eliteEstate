@@ -45,14 +45,10 @@ export function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#070b14]">
+    <div className="relative min-h-screen overflow-hidden bg-[#07110e]">
       {/* Animated background */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="login-bg-orb login-bg-orb-1" />
-        <div className="login-bg-orb login-bg-orb-2" />
-        <div className="login-bg-orb login-bg-orb-3" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgba(7,11,20,0.8))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(16,66,51,0.18),rgba(7,17,14,0.9))]" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -67,10 +63,10 @@ export function LoginForm() {
         <div className="w-full max-w-[440px] login-fade-up">
           {/* Brand */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-2xl shadow-blue-500/30 ring-1 ring-white/20 transition-transform duration-300 hover:scale-105">
+            <div className="mx-auto mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-emerald-600 shadow-2xl shadow-emerald-900/40 ring-1 ring-amber-200/30 transition-transform duration-300 hover:scale-105">
               <Building2 className="h-9 w-9 text-white" />
             </div>
-            <h1 className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               Elite Estate
             </h1>
             <p className="mt-2 text-sm font-medium text-slate-400">
@@ -82,8 +78,8 @@ export function LoginForm() {
           <div className="login-glass-card rounded-3xl p-8 sm:p-9">
             <div className="mb-7">
               <div className="mb-1 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-blue-400" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+                <ShieldCheck className="h-4 w-4 text-amber-300" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-amber-300">
                   Secure Access
                 </span>
               </div>
@@ -200,8 +196,8 @@ export function LoginForm() {
               </form>
             </Form>
 
-            <div className="mt-6 rounded-lg border border-blue-400/20 bg-blue-500/10 px-4 py-3 text-sm text-slate-300">
-              <p className="font-semibold text-blue-300">Demo workspace</p>
+            <div className="mt-6 rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-slate-300">
+              <p className="font-semibold text-emerald-300">Demo workspace</p>
               <p className="mt-1">demo@eliteestate.com · Demo@12345</p>
             </div>
           </div>
