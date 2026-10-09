@@ -204,6 +204,8 @@ export const leadService = {
     const userId = typeof user === 'string' ? user : user.userId;
     const permissions = typeof user === 'string' ? [] : user.permissions;
 
+    if (typeof user !== 'string' && !canManageLead(user, lead)) throw new AppError('You do not have access to this lead', 403);
+
     if ((CLOSED_LEAD_STATUSES as readonly string[]).includes(lead.status) && !isLeadAdmin(permissions)) {
       throw new AppError('This lead is closed/booked. Only an admin can edit or reopen it.', 403);
     }

@@ -20,6 +20,7 @@ leadRepository.getActivities=async(id,assignmentId,options)=>({assignmentId,opti
   assert.equal((await leadService.getActivities(lead._id,employee)).options.strict,false);
   assert.equal((await leadService.getById(lead._id,employee)).notes.length,2);
   await assert.rejects(()=>leadService.getById(lead._id,{...employee,userId:'555555555555555555555555'}),/access/);
+  await assert.rejects(()=>leadService.update(lead._id,{priority:'hot'},{...employee,userId:'555555555555555555555555'}),/access/);
   assert.equal(transferLeadSchema.parse({body:{assignedTo:employee.userId,transferRemark:'New owner'},params:{id:lead._id}}).body.sharePreviousRemarks,false);
   assert.equal(updateLeadSchema.safeParse({body:{budgetMin:30000,budgetMax:20000},params:{id:lead._id}}).success,false);
   assert.equal(updateLeadSchema.safeParse({body:{budgetMin:30000,budgetMax:null},params:{id:lead._id}}).success,true);

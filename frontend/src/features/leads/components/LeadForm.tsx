@@ -594,7 +594,8 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                   <FormLabel>{mode === 'create' ? 'Initial Remark' : 'Initial Remark (Locked)'}</FormLabel>
                   <FormControl>
                     <textarea
-                      className="crm-input min-h-[80px] w-full resize-y px-3 py-2"
+                      className="crm-input min-h-[112px] w-full resize-y px-3 py-3 leading-relaxed"
+                      rows={4}
                       placeholder="Initial notes about this lead..."
                       disabled={isSubmitting || mode === 'edit'}
                       {...field}

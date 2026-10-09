@@ -322,6 +322,12 @@ html.crm-app body {
   border-color: oklch(0.75 0.05 264) !important;
 }
 
+textarea.crm-input {
+  height: auto !important;
+  min-height: 7rem !important;
+  line-height: 1.6 !important;
+}
+
 .crm-input:focus-visible {
   border-color: #3b82f6 !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;

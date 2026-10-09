@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { LeadStatusBadge, LeadPriorityBadge } from './LeadStatusBadge';
+import { LeadBadgeEditor } from './LeadBadgeEditor';
 import { FollowUpForm } from './FollowUpForm';
 import { Lead, LeadActivity, LeadFollowUp } from '../types/lead.types';
 import { leadService } from '../services/lead.service';
@@ -103,6 +104,7 @@ export function LeadProcessDialog({ lead, open, onOpenChange, onRefresh }: LeadP
     const nonFollowUpActivities = activities.filter((a) => {
       if ((a as { metadata?: { followUpId?: string } }).metadata?.followUpId) return false;
       if (a.type === 'FOLLOW_UP_ADDED') return false;
+      if (['STATUS_CHANGED', 'LEAD_CLOSED'].includes(a.type) && !a.remark?.trim()) return false;
       if (['CALL_DONE', 'REVISIT_COMPLETED', 'NEGOTIATION_STARTED'].includes(a.type)) return false;
       if (a.title?.startsWith('Follow-up:')) return false;
       return true;
@@ -186,12 +188,14 @@ export function LeadProcessDialog({ lead, open, onOpenChange, onRefresh }: LeadP
         title={lead.customerName}
         description={`Lead ${lead.leadId} · ${formatLeadCategoryShort(lead.category)} · ${lead.mobile}`}
         icon={Target}
-        maxWidth="sm:max-w-6xl w-[98vw]"
+        maxWidth="w-[calc(100vw-1rem)] max-w-none sm:max-w-none"
+        className="h-[96dvh] max-h-[96dvh]"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex shrink-0 flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <LeadStatusBadge status={lead.status} />
-            <LeadPriorityBadge priority={lead.priority} />
+            <LeadBadgeEditor lead={lead} kind="status" onRefresh={onRefresh} />
+            <LeadBadgeEditor lead={lead} kind="priority" onRefresh={onRefresh} />
+            <span className="text-xs text-muted-foreground">Created {formatDate(lead.createdAt)} · Next follow-up {formatDate(lead.nextFollowUpDate)}</span>
             <Badge variant="outline" className="text-[11px]">
               {formatLeadCategoryShort(lead.category)}
             </Badge>
@@ -202,6 +206,13 @@ export function LeadProcessDialog({ lead, open, onOpenChange, onRefresh }: LeadP
               </Badge>
             )}
           </div>
+
+          {lead.initialRemark && (
+            <section className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+              <h3 className="mb-1 text-xs font-semibold text-primary">Initial Remark</h3>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{lead.initialRemark}</p>
+            </section>
+          )}
 
           {pastInquiries.length > 0 && (
             <div className="rounded-xl border border-amber-300 bg-amber-50/80 p-3 text-xs dark:border-amber-800/60 dark:bg-amber-950/20">
@@ -262,7 +273,7 @@ export function LeadProcessDialog({ lead, open, onOpenChange, onRefresh }: LeadP
             </Button>
           </div>
 
-          <div className="crm-table-wrap min-h-[300px] flex-1 overflow-auto rounded-xl border border-border/60">
+          <div className="crm-table-wrap min-h-[300px] shrink-0 overflow-x-auto rounded-xl border border-border/60">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -344,25 +355,6 @@ export function LeadProcessDialog({ lead, open, onOpenChange, onRefresh }: LeadP
             </Table>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-            <div className="rounded-xl border border-border/50 bg-muted/30 p-2.5">
-              <p className="text-muted-foreground">Assigned</p>
-              <p className="font-medium">{lead.assignedTo?.name || 'Unassigned'}</p>
-              <p className="text-[11px] text-muted-foreground">{formatDate(lead.assignedAt)}</p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-muted/30 p-2.5">
-              <p className="text-muted-foreground">Next Follow-up</p>
-              <p className="font-medium">{formatDate(lead.nextFollowUpDate)}</p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-muted/30 p-2.5">
-              <p className="text-muted-foreground">Follow-ups</p>
-              <p className="font-medium">{followUps.length}</p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-muted/30 p-2.5">
-              <p className="text-muted-foreground">Activities</p>
-              <p className="font-medium">{activities.length}</p>
-            </div>
-          </div>
         </div>
       </ModalShell>
 

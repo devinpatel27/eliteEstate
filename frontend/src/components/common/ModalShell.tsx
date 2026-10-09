@@ -18,6 +18,7 @@ interface ModalShellProps {
   icon: LucideIcon;
   children: React.ReactNode;
   maxWidth?: string;
+  className?: string;
 }
 
 export function ModalShell({
@@ -28,13 +29,15 @@ export function ModalShell({
   icon: Icon,
   children,
   maxWidth = 'sm:max-w-lg',
+  className,
 }: ModalShellProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
           'crm-dialog flex max-h-[92vh] flex-col gap-0 p-0',
-          maxWidth
+          maxWidth,
+          className
         )}
         data-row-click-ignore
         hideCloseButton
@@ -55,8 +58,8 @@ export function ModalShell({
       >
         <div className="relative shrink-0 border-b border-border/60 px-6 py-5 pr-14">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
-              <Icon className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <DialogTitle className="truncate text-xl font-bold">{title}</DialogTitle>

@@ -5,7 +5,7 @@ import { ArrowUpDown, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { Lead } from '../types/lead.types';
 import { Button } from '@/components/ui/button';
-import { LeadStatusBadge, LeadPriorityBadge } from './LeadStatusBadge';
+import { LeadBadgeEditor } from './LeadBadgeEditor';
 import { NextFollowUpCell } from './NextFollowUpCell';
 import { LeadRowActions } from './LeadRowActions';
 import { formatDate, formatDateTime, cn } from '@/lib/utils';
@@ -136,8 +136,8 @@ export function getLeadColumns(actions: ColumnActions): ColumnDef<Lead>[] {
       header: 'Priority & Status',
       cell: ({ row }) => (
         <div className="flex flex-col gap-1 items-start">
-          <LeadPriorityBadge priority={row.original.priority} />
-          <LeadStatusBadge status={row.original.status} />
+          <LeadBadgeEditor lead={row.original} kind="priority" onRefresh={actions.onRefresh} />
+          <LeadBadgeEditor lead={row.original} kind="status" onRefresh={actions.onRefresh} />
         </div>
       ),
       size: 105,

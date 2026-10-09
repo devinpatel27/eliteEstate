@@ -35,8 +35,8 @@ function SidebarContent({
       >
         {!collapsed && (
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-              <Building2 className="w-4 h-4 text-white" />
+            <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Building2 className="h-5 w-5 shrink-0" />
             </div>
             <div>
               <p className="text-sm font-bold text-sidebar-foreground leading-tight">
@@ -50,8 +50,8 @@ function SidebarContent({
           <CloseButton onClick={onNavClick} className="ml-auto shrink-0" />
         )}
         {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-            <Building2 className="w-4 h-4 text-white" />
+          <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <Building2 className="h-5 w-5 shrink-0" />
           </div>
         )}
         <button
