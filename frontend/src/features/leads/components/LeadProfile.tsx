@@ -92,7 +92,7 @@ export function LeadProfile({ lead, onRefresh }: LeadProfileProps) {
   })();
 
   const handleTransfer = async (data: TransferLeadFormValues) => {
-    await transferLead(lead._id, data.assignedTo, data.transferRemark);
+    await transferLead(lead._id, data.assignedTo, data.transferRemark, data.sharePreviousRemarks);
     onRefresh();
     refetch();
   };

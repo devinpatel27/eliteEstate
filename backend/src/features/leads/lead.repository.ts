@@ -35,7 +35,7 @@ export interface ListLeadOptions {
 }
 
 const populateFields =
-  'customerName mobile alternateMobile email city address category propertyType propertyConfiguration leadSource budgetMin budgetMax preferredArea priority status initialRemark assignedTo currentAssignmentId assignedAt nextFollowUpDate leadId createdAt updatedAt notes';
+  'customerName mobile alternateMobile email city address category propertyType propertyConfiguration leadSource budgetMin budgetMax preferredArea priority status initialRemark assignedTo currentAssignmentId assignedAt nextFollowUpDate leadId createdAt updatedAt notes sharePreviousRemarks remarksRestrictedAt';
 
 function getScheduleDateRanges(now = new Date()) {
   const startOfDay = new Date(now);
@@ -144,7 +144,7 @@ async function attachLastFollowUps<T extends Record<string, unknown>>(
       .filter((lead) => lead.currentAssignmentId)
       .map((lead) => ({
         leadId: lead._id,
-        assignmentId: lead.currentAssignmentId,
+        ...(lead.sharePreviousRemarks ? {} : { assignmentId: lead.currentAssignmentId }),
       }));
 
     if (assignmentPairs.length === 0) return leads;
@@ -173,7 +173,7 @@ async function attachLastFollowUps<T extends Record<string, unknown>>(
 
     return leads.map((lead) => {
       const extra = remarkMap.get(String(lead._id));
-      const remark = extra?.lastFollowUpRemark || (lead as Record<string, unknown>).initialRemark as string | undefined;
+      const remark = extra?.lastFollowUpRemark || (!(lead as Record<string, unknown>).remarksRestrictedAt || lead.sharePreviousRemarks ? (lead as Record<string, unknown>).initialRemark as string | undefined : undefined);
       return extra
         ? { ...lead, ...extra, lastFollowUpRemark: remark }
         : { ...lead, lastFollowUpRemark: remark };

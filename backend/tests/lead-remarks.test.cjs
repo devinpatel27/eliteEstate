@@ -1,0 +1,27 @@
+const assert = require('node:assert/strict');
+process.env.DATABASE_URL ||= 'postgresql://unused/test';
+const {leadService}=require('../dist/features/leads/lead.service');
+const {leadRepository}=require('../dist/features/leads/lead.repository');
+const {transferLeadSchema,updateLeadSchema}=require('../dist/features/leads/lead.validator');
+const employee={userId:'111111111111111111111111',permissions:['lead:read_assigned']};
+const admin={userId:'222222222222222222222222',permissions:['*']};
+const lead={_id:'333333333333333333333333',assignedTo:employee.userId,currentAssignmentId:'444444444444444444444444',status:'open',sharePreviousRemarks:false,remarksRestrictedAt:new Date('2026-10-01'),initialRemark:'Private initial remark',notes:[{text:'old',createdAt:new Date('2026-09-01')},{text:'new',createdAt:new Date('2026-10-02')}]};
+leadRepository.findById=async()=>lead;
+leadRepository.getFollowUps=async(id,assignmentId,options)=>({assignmentId,options});
+leadRepository.getActivities=async(id,assignmentId,options)=>({assignmentId,options});
+(async()=>{
+  const restricted=await leadService.getById(lead._id,employee);
+  assert.equal(restricted.initialRemark,undefined);assert.deepEqual(restricted.notes.map(n=>n.text),['new']);
+  assert.equal((await leadService.getFollowUps(lead._id,employee)).assignmentId,lead.currentAssignmentId);
+  assert.equal((await leadService.getActivities(lead._id,employee)).options.strict,true);
+  assert.equal((await leadService.getById(lead._id,admin)).initialRemark,'Private initial remark');
+  lead.sharePreviousRemarks=true;
+  assert.equal((await leadService.getFollowUps(lead._id,employee)).assignmentId,undefined);
+  assert.equal((await leadService.getActivities(lead._id,employee)).options.strict,false);
+  assert.equal((await leadService.getById(lead._id,employee)).notes.length,2);
+  await assert.rejects(()=>leadService.getById(lead._id,{...employee,userId:'555555555555555555555555'}),/access/);
+  assert.equal(transferLeadSchema.parse({body:{assignedTo:employee.userId,transferRemark:'New owner'},params:{id:lead._id}}).body.sharePreviousRemarks,false);
+  assert.equal(updateLeadSchema.safeParse({body:{budgetMin:30000,budgetMax:20000},params:{id:lead._id}}).success,false);
+  assert.equal(updateLeadSchema.safeParse({body:{budgetMin:30000,budgetMax:null},params:{id:lead._id}}).success,true);
+  console.log('Passed: restricted/shared remarks, admin access, unrelated employee denial, default privacy, budget validation');
+})().catch(error=>{console.error(error);process.exitCode=1});

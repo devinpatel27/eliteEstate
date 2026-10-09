@@ -100,10 +100,10 @@ export function useLeadActions() {
     }
   };
 
-  const transferLead = async (id: string, assignedTo: string, transferRemark: string) => {
+  const transferLead = async (id: string, assignedTo: string, transferRemark: string, sharePreviousRemarks = false) => {
     setIsLoading(true);
     try {
-      await leadService.transfer(id, { assignedTo, transferRemark });
+      await leadService.transfer(id, { assignedTo, transferRemark, sharePreviousRemarks });
       toast.success('Lead transferred successfully');
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };

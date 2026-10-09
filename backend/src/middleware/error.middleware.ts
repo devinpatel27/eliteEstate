@@ -19,6 +19,10 @@ export const errorMiddleware = (
   res: Response,
   _next: NextFunction
 ): void => {
+  if ((err as any).code === 'P0001' && err.message.includes('Employee limit reached')) {
+    res.status(409).json({ success: false, message: 'Employee limit reached: maximum 3 employees, excluding Master Admin' });
+    return;
+  }
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,

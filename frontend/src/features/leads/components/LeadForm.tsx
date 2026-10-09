@@ -27,6 +27,13 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useDebounce } from '@/hooks/useDebounce';
 
 const PROPERTY_CONFIG_OPTIONS = ['1 BHK', '2 BHK', '3 BHK', '4 BHK'];
+const RENT_BUDGET_OPTIONS = [
+  { value: '0-10000', label: 'Up to ₹10,000 / month', min: 0, max: 10000 },
+  { value: '10000-20000', label: '₹10,000 - ₹20,000 / month', min: 10000, max: 20000 },
+  { value: '20000-30000', label: '₹20,000 - ₹30,000 / month', min: 20000, max: 30000 },
+  { value: '30000-50000', label: '₹30,000 - ₹50,000 / month', min: 30000, max: 50000 },
+  { value: '50000-100000', label: '₹50,000 - ₹1,00,000 / month', min: 50000, max: 100000 },
+];
 const BUDGET_RANGE_OPTIONS = [
   { value: '2500000-5000000', label: '25L - 50L', min: 2500000, max: 5000000 },
   { value: '5000000-7500000', label: '50L - 75L', min: 5000000, max: 7500000 },
@@ -81,9 +88,10 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const isModal = variant === 'modal';
-  const { hasPermission, isReady } = usePermissions();
-  const canAssignOnCreate = isReady && hasPermission(PERMISSIONS.LEAD_CREATE) && hasPermission(PERMISSIONS.EMPLOYEE_READ);
+  const { hasPermission, isReady, canViewAllLeads } = usePermissions();
+  const canAssignOnCreate = isReady && canViewAllLeads() && hasPermission(PERMISSIONS.EMPLOYEE_READ);
 
+  const [customBudget, setCustomBudget] = useState(Boolean(lead && (lead.budgetMin !== undefined || lead.budgetMax !== undefined) && !(lead.category === 'rent_property' ? RENT_BUDGET_OPTIONS : BUDGET_RANGE_OPTIONS).some(option => option.min === lead.budgetMin && option.max === lead.budgetMax)));
   const schema = mode === 'create' ? createLeadSchema : updateLeadSchema;
 
   const form = useForm<CreateLeadFormValues>({
@@ -112,6 +120,8 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
       assignedTo: '', priority: 'warm', nextFollowUpDate: '', initialRemark: '',
     },
   });
+  const budgetOptions = form.watch('category') === 'rent_property' ? RENT_BUDGET_OPTIONS : BUDGET_RANGE_OPTIONS;
+  const canAssign = canAssignOnCreate && hasPermission(PERMISSIONS.LEAD_TRANSFER);
   const watchedMobile = form.watch('mobile');
   const debouncedMobile = useDebounce(watchedMobile, 350);
 
@@ -121,7 +131,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
       masterService.listLeadSources(true),
     ];
 
-    if (canAssignOnCreate && mode === 'create') {
+    if (canAssignOnCreate) {
       loaders.push(employeeService.list({ status: 'active', limit: 100 }));
     }
 
@@ -133,7 +143,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
       ];
       if (pt.success) setPropertyTypes(pt.data || []);
       if (ls.success) setLeadSources(ls.data || []);
-      if (emp?.success) setEmployees(emp.data || []);
+      if (emp?.success) setEmployees((emp.data || []).filter(employee => employee.role?.roleName !== 'master_admin'));
     }).catch(() => {
       /* masters still load individually if employee list fails */
     });
@@ -214,8 +224,8 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
         mobile: normalizeMobileInput(values.mobile),
         alternateMobile: values.alternateMobile ? normalizeMobileInput(values.alternateMobile) : undefined,
         propertyConfiguration: values.propertyConfiguration || undefined,
-        budgetMin: values.budgetMin ? Number(values.budgetMin) : undefined,
-        budgetMax: values.budgetMax ? Number(values.budgetMax) : undefined,
+        budgetMin: values.budgetMin === '' || values.budgetMin === undefined ? undefined : Number(values.budgetMin),
+        budgetMax: values.budgetMax === '' || values.budgetMax === undefined ? undefined : Number(values.budgetMax),
         nextFollowUpDate: values.nextFollowUpDate || undefined,
         assignedTo: values.assignedTo || undefined,
         email: values.email || undefined,
@@ -229,7 +239,10 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
           router.push(ROUTES.LEADS);
         }
       } else {
-        await leadService.update(lead!._id, payload);
+        await leadService.update(lead!._id, { ...payload, mobile: undefined, assignedTo: undefined, budgetMin: payload.budgetMin ?? null, budgetMax: payload.budgetMax ?? null });
+        if (canAssign && values.assignedTo && values.assignedTo !== lead?.assignedTo?._id) {
+          await leadService.transfer(lead!._id, { assignedTo: values.assignedTo, transferRemark: 'Reassigned by admin from Edit Lead', sharePreviousRemarks: values.sharePreviousRemarks ?? false });
+        }
         toast.success('Lead updated successfully');
         if (onSuccess) {
           onSuccess();
@@ -387,7 +400,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                         value={category.value}
                         checked={field.value === category.value}
                         disabled={isSubmitting}
-                        onChange={() => field.onChange(category.value)}
+                        onChange={() => { field.onChange(category.value); form.setValue('budgetMin', undefined); form.setValue('budgetMax', undefined); }}
                       />
                       {category.shortLabel}
                     </label>
@@ -476,19 +489,33 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                 <FormControl>
                   <SearchableSelect
                     value={
-                      BUDGET_RANGE_OPTIONS.find((option) => option.min === form.watch('budgetMin') && option.max === form.watch('budgetMax'))?.value || ''
+                      customBudget ? 'custom' : budgetOptions.find((option) => option.min === form.watch('budgetMin') && option.max === form.watch('budgetMax'))?.value || ''
                     }
                     onValueChange={(value) => {
-                      const option = BUDGET_RANGE_OPTIONS.find((item) => item.value === value);
+                      setCustomBudget(value === 'custom');
+                      if (value === 'custom') return;
+                      const option = budgetOptions.find((item) => item.value === value);
                       form.setValue('budgetMin', option?.min, { shouldValidate: true });
                       form.setValue('budgetMax', option?.max, { shouldValidate: true });
                     }}
-                    options={BUDGET_RANGE_OPTIONS.map((item) => ({ value: item.value, label: item.label }))}
+                    options={[...budgetOptions.map((item) => ({ value: item.value, label: item.label })), { value: 'custom', label: 'Custom budget range' }]}
                     placeholder="Select budget range"
                     searchPlaceholder="Search budget range..."
                     disabled={isSubmitting}
                   />
                 </FormControl>
+                {customBudget && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {(['budgetMin', 'budgetMax'] as const).map(name => (
+                      <FormField key={name} control={form.control} name={name} render={({ field }) => (
+                        <FormItem><FormLabel>{name === 'budgetMin' ? 'Minimum budget (₹)' : 'Maximum budget (₹)'}</FormLabel>
+                          <FormControl><Input type="number" min={0} disabled={isSubmitting} value={field.value ?? ''} onChange={event => field.onChange(event.target.value === '' ? undefined : Number(event.target.value))} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    ))}
+                  </div>
+                )}
                 {(form.formState.errors.budgetMin?.message || form.formState.errors.budgetMax?.message) && (
                   <p className="text-sm font-medium text-destructive">
                     {String(form.formState.errors.budgetMin?.message || form.formState.errors.budgetMax?.message)}
@@ -517,7 +544,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                 <FormMessage />
               </FormItem>
             )} />
-            {mode === 'create' && canAssignOnCreate && (
+            {(mode === 'create' ? canAssignOnCreate : canAssign) && (
               <FormField control={form.control} name="assignedTo" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Assign To Employee</FormLabel>
@@ -536,6 +563,14 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                   </FormControl>
                   <FormMessage />
                 </FormItem>
+              )} />
+            )}
+            {mode === 'edit' && canAssign && form.watch('assignedTo') !== (lead?.assignedTo?._id || '') && (
+              <FormField control={form.control} name="sharePreviousRemarks" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel className="flex items-center gap-2">
+                  <input type="checkbox" checked={field.value ?? false} disabled={isSubmitting} onChange={event => field.onChange(event.target.checked)} />
+                  Allow new employee to see all previous remarks
+                </FormLabel></FormItem>
               )} />
             )}
             {mode === 'create' && (

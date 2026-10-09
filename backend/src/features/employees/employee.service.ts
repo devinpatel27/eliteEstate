@@ -1,5 +1,6 @@
 import { employeeRepository } from './employee.repository';
 import { RoleModel } from '../../models/Role.model';
+import { UserModel } from '../../models/User.model';
 import { hashPassword } from '../../utils/bcrypt.utils';
 import { generateEmployeeId } from '../../utils/employeeId.utils';
 import { logActivity } from '../../utils/activityLogger';
@@ -45,6 +46,12 @@ export const employeeService = {
 
     const roleExists = await RoleModel.findById(data.role);
     if (!roleExists) throw new AppError('Invalid role selected', 400);
+
+    if (roleExists.roleName !== 'master_admin') {
+      const masterRoles = await RoleModel.find({ roleName: 'master_admin' }).select('_id');
+      const count = await UserModel.countDocuments({ role: { $nin: masterRoles.map(role => role._id) } });
+      if (count >= 3) throw new AppError('Employee limit reached: maximum 3 employees, excluding Master Admin', 409);
+    }
 
     const employeeId = await generateEmployeeId();
     const hashedPassword = await hashPassword(data.password);

@@ -32,7 +32,7 @@ export const createLeadSchema = z.object({
     priority: z.enum(LEAD_PRIORITIES as unknown as [string, ...string[]]).default('warm'),
     nextFollowUpDate: z.string().optional(),
     initialRemark: z.string().optional(),
-  }),
+  }).refine(data => data.budgetMin == null || data.budgetMax == null || data.budgetMin <= data.budgetMax, { message: 'Minimum budget cannot exceed maximum budget', path: ['budgetMax'] }),
 });
 
 export const updateLeadSchema = z.object({
@@ -47,11 +47,11 @@ export const updateLeadSchema = z.object({
     propertyType: z.string().optional(),
     propertyConfiguration: z.string().optional(),
     leadSource: z.string().optional(),
-    budgetMin: z.coerce.number().min(0).optional(),
-    budgetMax: z.coerce.number().min(0).optional(),
+    budgetMin: z.coerce.number().min(0).nullable().optional(),
+    budgetMax: z.coerce.number().min(0).nullable().optional(),
     preferredArea: z.string().optional(),
     priority: z.enum(LEAD_PRIORITIES as unknown as [string, ...string[]]).optional(),
-  }),
+  }).refine(data => data.budgetMin == null || data.budgetMax == null || data.budgetMin <= data.budgetMax, { message: 'Minimum budget cannot exceed maximum budget', path: ['budgetMax'] }),
   params: z.object({ id: z.string().min(1) }),
 });
 
@@ -91,6 +91,7 @@ export const updateStatusSchema = z.object({
 
 export const transferLeadSchema = z.object({
   body: z.object({
+    sharePreviousRemarks: z.boolean().default(false),
     assignedTo: z.string().min(1, 'Employee is required'),
     transferRemark: z.string().min(1, 'Transfer remark is required').trim(),
   }),

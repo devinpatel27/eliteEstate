@@ -55,7 +55,7 @@ export const leadService = {
     return res.data;
   },
 
-  update: async (id: string, data: Partial<CreateLeadData>): Promise<ApiResponse<Lead>> => {
+  update: async (id: string, data: Partial<Omit<CreateLeadData, 'budgetMin' | 'budgetMax'>> & { budgetMin?: number | null; budgetMax?: number | null }): Promise<ApiResponse<Lead>> => {
     const res = await api.put(`/leads/${id}`, data);
     return res.data;
   },
@@ -79,7 +79,7 @@ export const leadService = {
     return res.data;
   },
 
-  transfer: async (id: string, data: { assignedTo: string; transferRemark: string }): Promise<ApiResponse<Lead>> => {
+  transfer: async (id: string, data: { assignedTo: string; transferRemark: string; sharePreviousRemarks?: boolean }): Promise<ApiResponse<Lead>> => {
     const res = await api.post(`/leads/${id}/transfer`, data);
     return res.data;
   },

@@ -22,6 +22,7 @@ const baseLeadSchema = z.object({
   budgetMax: z.coerce.number().min(0).optional().or(z.literal('')),
   preferredArea: z.string().optional(),
   assignedTo: z.string().optional(),
+  sharePreviousRemarks: z.boolean().optional(),
   priority: z.enum(['hot', 'warm', 'cold']).default('warm'),
   nextFollowUpDate: z.string().optional(),
   initialRemark: z.string().optional(),
@@ -45,7 +46,7 @@ export const createLeadSchema = budgetRangeRefine(baseLeadSchema);
 
 export const updateLeadSchema = budgetRangeRefine(
   baseLeadSchema.partial().omit({ mobile: true, initialRemark: true }).extend({
-    mobile: mobileSchema.optional(),
+    mobile: z.string().optional(),
   })
 );
 
@@ -62,6 +63,7 @@ export const followUpSchema = z.object({
 });
 
 export const transferLeadSchema = z.object({
+  sharePreviousRemarks: z.boolean().default(false),
   assignedTo: z.string().min(1, 'Employee is required'),
   transferRemark: z.string().min(1, 'Transfer remark is required').trim(),
 });

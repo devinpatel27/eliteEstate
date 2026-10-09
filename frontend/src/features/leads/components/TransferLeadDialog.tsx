@@ -24,13 +24,13 @@ export function TransferLeadDialog({ open, onOpenChange, currentAssigneeId, onSu
 
   const form = useForm<TransferLeadFormValues>({
     resolver: zodResolver(transferLeadSchema),
-    defaultValues: { assignedTo: '', transferRemark: '' },
+    defaultValues: { assignedTo: '', transferRemark: '', sharePreviousRemarks: false },
   });
 
   useEffect(() => {
     if (open) {
       employeeService.list({ status: 'active', limit: 100 }).then((res) => {
-        if (res.success) setEmployees((res.data || []).filter((e) => e._id !== currentAssigneeId));
+        if (res.success) setEmployees((res.data || []).filter((e) => e._id !== currentAssigneeId && e.role?.roleName !== 'master_admin'));
       });
     }
   }, [open, currentAssigneeId]);
@@ -75,6 +75,15 @@ export function TransferLeadDialog({ open, onOpenChange, currentAssigneeId, onSu
               <FormLabel>Transfer Remark <span className="text-destructive">*</span></FormLabel>
               <FormControl><textarea className="crm-input min-h-[70px] w-full resize-y px-3 py-2" placeholder="Reason for transfer..." {...field} /></FormControl>
               <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="sharePreviousRemarks" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <input type="checkbox" checked={field.value} onChange={(event) => field.onChange(event.target.checked)} />
+                Allow new employee to see all previous remarks
+              </FormLabel>
+              <p className="text-xs text-muted-foreground">When disabled, only remarks from the new assignment are shown.</p>
             </FormItem>
           )} />
           <div className="flex gap-2 pt-2">

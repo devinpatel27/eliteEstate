@@ -1,4 +1,5 @@
 import { FilterQuery, Types } from 'mongoose';
+import { assertValidAssignee } from './lead.assignment';
 import { leadRepository } from './lead.repository';
 import {
   getLeadAccessScope,
@@ -48,6 +49,15 @@ const assertCanView = (user: JwtPayload, lead: ILead) => {
   return scope;
 };
 
+const visibleRemarks = (lead: ILead, user: JwtPayload): ILead => {
+  if (isLeadAdmin(user.permissions) || lead.sharePreviousRemarks || !lead.remarksRestrictedAt) return lead;
+  const restrictedAt = new Date(lead.remarksRestrictedAt).getTime();
+  const data = (typeof lead.toObject === 'function' ? lead.toObject() : { ...lead }) as ILead;
+  data.initialRemark = undefined;
+  data.notes = (data.notes || []).filter(note => new Date(note.createdAt).getTime() >= restrictedAt);
+  return data;
+};
+
 export const leadService = {
   list: async (user: JwtPayload, options: Parameters<typeof leadRepository.findAll>[0]) => {
     const canReadAssigned = hasLeadPermission(user.permissions, PERMISSIONS.LEAD_READ_ASSIGNED);
@@ -62,16 +72,18 @@ export const leadService = {
       options.assignedTo = undefined;
     }
 
-    return leadRepository.findAll(options);
+    const result = await leadRepository.findAll(options);
+    return { ...result, data: result.data.map(lead => visibleRemarks(lead as unknown as ILead, user)) };
   },
 
-  checkMobile: async (mobile: string) => {
+  checkMobile: async (mobile: string, user?: JwtPayload) => {
     if (!isValidMobile(mobile)) {
       throw new AppError('Invalid mobile number', 400);
     }
 
     const normalized = normalizeMobile(mobile);
-    const leads = await leadRepository.findByMobile(normalized);
+    const found = await leadRepository.findByMobile(normalized);
+    const leads = user && !isLeadAdmin(user.permissions) ? found.map(lead => ({ ...lead, initialRemark: undefined, lastFollowUpRemark: undefined, notes: [] })) : found;
     const activeLead = leads.find((l) => (ACTIVE_LEAD_STATUSES as readonly string[]).includes(l.status as string));
     const closedLeads = leads.filter((l) =>
       (CLOSED_LEAD_STATUSES as readonly string[]).includes(l.status as string)
@@ -90,10 +102,11 @@ export const leadService = {
     const lead = await leadRepository.findById(id);
     if (!lead) throw new AppError('Lead not found', 404);
     assertCanView(user, lead);
-    return lead;
+    return visibleRemarks(lead, user);
   },
 
   create: async (data: CreateLeadInput, userId: string, ipAddress?: string) => {
+    if (data.assignedTo) await assertValidAssignee(data.assignedTo);
     if (!isValidMobile(data.mobile)) {
       throw new AppError('Invalid mobile number', 400);
     }
@@ -392,6 +405,9 @@ export const leadService = {
       throw new AppError('Lead is already assigned to this employee', 400);
     }
 
+    if (!isLeadAdmin(permissions)) throw new AppError('Only an admin can assign or reassign leads', 403);
+    await assertValidAssignee(data.assignedTo);
+
     await leadRepository.closeCurrentAssignment(id, data.transferRemark);
 
     const sequence = await leadRepository.getNextAssignmentSequence(id);
@@ -409,6 +425,8 @@ export const leadService = {
       currentAssignmentId: assignment._id,
       assignedAt: now,
       updatedBy: new Types.ObjectId(userId),
+      sharePreviousRemarks: data.sharePreviousRemarks,
+      remarksRestrictedAt: lead.assignedTo ? now : undefined,
     });
     // Clear schedule NFD on transfer — new assignee starts without a prior due date
     await leadRepository.syncNextFollowUpDate(id, new Types.ObjectId(userId));
@@ -438,12 +456,12 @@ export const leadService = {
     if (!lead) throw new AppError('Lead not found', 404);
     const scope = assertCanView(user, lead);
 
-    if (!scope.isAdmin && !scope.filterAssignmentId) {
+    if (!scope.isAdmin && !scope.canViewHistory && !scope.filterAssignmentId) {
       return [];
     }
 
-    const assignmentId = scope.isAdmin ? undefined : scope.filterAssignmentId;
-    return leadRepository.getFollowUps(id, assignmentId, { strict: !scope.isAdmin });
+    const assignmentId = scope.isAdmin || scope.canViewHistory ? undefined : scope.filterAssignmentId;
+    return leadRepository.getFollowUps(id, assignmentId, { strict: !scope.isAdmin && !scope.canViewHistory });
   },
 
   createFollowUp: async (
@@ -605,12 +623,12 @@ export const leadService = {
     if (!lead) throw new AppError('Lead not found', 404);
     const scope = assertCanView(user, lead);
 
-    if (!scope.isAdmin && !scope.filterAssignmentId) {
+    if (!scope.isAdmin && !scope.canViewHistory && !scope.filterAssignmentId) {
       return [];
     }
 
-    const assignmentId = scope.isAdmin ? undefined : scope.filterAssignmentId;
-    return leadRepository.getActivities(id, assignmentId, { strict: !scope.isAdmin });
+    const assignmentId = scope.isAdmin || scope.canViewHistory ? undefined : scope.filterAssignmentId;
+    return leadRepository.getActivities(id, assignmentId, { strict: !scope.isAdmin && !scope.canViewHistory });
   },
 
   getAssignments: async (id: string, user: JwtPayload) => {
@@ -618,7 +636,7 @@ export const leadService = {
     if (!lead) throw new AppError('Lead not found', 404);
     const scope = assertCanView(user, lead);
 
-    const assignedToUserId = scope.isAdmin ? undefined : user.userId;
+    const assignedToUserId = scope.isAdmin || scope.canViewHistory ? undefined : user.userId;
     return leadRepository.getAssignments(id, assignedToUserId);
   },
 

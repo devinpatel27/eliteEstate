@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { leadService } from './lead.service';
 import { sendSuccess, sendCreated, sendPaginated } from '../../utils/response.utils';
 import { getPagination } from '../../utils/pagination.utils';
+import { isLeadAdmin } from './lead.access';
+import { AppError } from '../../middleware/error.middleware';
 
 export const leadController = {
   list: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -38,7 +40,7 @@ export const leadController = {
 
   checkMobile: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await leadService.checkMobile(req.query.mobile as string);
+      const result = await leadService.checkMobile(req.query.mobile as string, req.user!);
       sendSuccess(res, 'Mobile check completed', result);
     } catch (error) {
       next(error);
@@ -56,6 +58,7 @@ export const leadController = {
 
   create: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      if (req.body.assignedTo && !isLeadAdmin(req.user!.permissions)) throw new AppError('Only an admin can assign leads', 403);
       const lead = await leadService.create(req.body, req.user!.userId, req.ip);
       sendCreated(res, 'Lead created successfully', lead);
     } catch (error) {

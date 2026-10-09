@@ -10,6 +10,7 @@ export interface LeadAccessScope {
   filterAssignmentId?: string;
   assignedOnly: boolean;
   userId: string;
+  canViewHistory?: boolean;
 }
 
 export const hasLeadPermission = (
@@ -50,6 +51,7 @@ export const getLeadAccessScope = (user: JwtPayload, lead: ILead): LeadAccessSco
   return {
     canView: true,
     isAdmin: false,
+    canViewHistory: lead.sharePreviousRemarks === true,
     filterAssignmentId: resolveRefId(lead.currentAssignmentId),
     assignedOnly: true,
     userId,

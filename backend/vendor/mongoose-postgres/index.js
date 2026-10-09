@@ -293,6 +293,24 @@ async function connect(uri) {
     PRIMARY KEY (collection, id)
   )`);
   await pool.query('CREATE INDEX IF NOT EXISTS crm_documents_collection_idx ON crm_documents(collection)');
+  await pool.query(`CREATE OR REPLACE FUNCTION crm_employee_limit() RETURNS trigger LANGUAGE plpgsql AS $$
+  BEGIN
+    IF NEW.collection <> 'users' THEN RETURN NEW; END IF;
+    PERFORM pg_advisory_xact_lock(729103);
+    IF TG_OP = 'INSERT' AND EXISTS (SELECT 1 FROM crm_documents WHERE collection='users' AND id=NEW.id AND data->>'role' IS NOT DISTINCT FROM NEW.data->>'role') THEN RETURN NEW; END IF;
+    IF TG_OP = 'UPDATE' AND OLD.data->>'role' IS NOT DISTINCT FROM NEW.data->>'role' THEN RETURN NEW; END IF;
+    IF EXISTS (SELECT 1 FROM crm_documents WHERE collection='roles' AND id=NEW.data->>'role' AND data->>'roleName'='master_admin') THEN RETURN NEW; END IF;
+    IF (SELECT count(*) FROM crm_documents u WHERE u.collection='users' AND u.id<>NEW.id AND NOT EXISTS
+      (SELECT 1 FROM crm_documents r WHERE r.collection='roles' AND r.id=u.data->>'role' AND r.data->>'roleName'='master_admin')) >= 3 THEN
+      RAISE EXCEPTION 'Employee limit reached: maximum 3 employees, excluding Master Admin';
+    END IF;
+    RETURN NEW;
+  END $$`);
+  await pool.query(`DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='crm_employee_limit_trigger') THEN
+      CREATE TRIGGER crm_employee_limit_trigger BEFORE INSERT OR UPDATE ON crm_documents FOR EACH ROW EXECUTE FUNCTION crm_employee_limit();
+    END IF;
+  END $$`);
   connection.readyState = 1;
   connection.db = null;
   connection.emit('connected');

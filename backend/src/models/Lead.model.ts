@@ -31,6 +31,8 @@ export interface ILead extends Document {
   assignedTo?: Types.ObjectId;
   currentAssignmentId?: Types.ObjectId;
   assignedAt?: Date;
+  sharePreviousRemarks?: boolean;
+  remarksRestrictedAt?: Date;
   nextFollowUpDate?: Date;
   propertyId?: Types.ObjectId;
   createdBy: Types.ObjectId;
@@ -72,6 +74,8 @@ const leadSchema = new Schema<ILead>(
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
     currentAssignmentId: { type: Schema.Types.ObjectId, ref: 'LeadAssignment' },
     assignedAt: { type: Date },
+    sharePreviousRemarks: { type: Boolean, default: false },
+    remarksRestrictedAt: { type: Date },
     nextFollowUpDate: { type: Date },
     propertyId: { type: Schema.Types.ObjectId, ref: 'Property', index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
