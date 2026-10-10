@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Eye,
   EyeOff,
-  Building2,
   Loader2,
   Mail,
   Lock,
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/form';
 import { loginSchema, LoginFormValues } from '../schemas/auth.schema';
 import { useAuth } from '../hooks/useAuth';
+import { CompanyLogo } from '@/components/common/CompanyLogo';
 import { cn } from '@/lib/utils';
 
 export function LoginForm() {
@@ -45,10 +45,10 @@ export function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#07110e]">
+    <div className="relative min-h-screen overflow-hidden bg-[#202121]">
       {/* Animated background */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(16,66,51,0.18),rgba(7,17,14,0.9))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(96,97,97,0.18),rgba(32,33,33,0.9))]" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -63,13 +63,13 @@ export function LoginForm() {
         <div className="w-full max-w-[440px] login-fade-up">
           {/* Brand */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-emerald-600 shadow-2xl shadow-emerald-900/40 ring-1 ring-amber-200/30 transition-transform duration-300 hover:scale-105">
-              <Building2 className="h-9 w-9 text-white" />
+            <div className="mx-auto mb-4 h-40 w-24 rounded-lg bg-white p-2 shadow-lg sm:h-44 sm:w-28">
+              <CompanyLogo />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-white">
               Elite Estate
             </h1>
-            <p className="mt-2 text-sm font-medium text-slate-400">
+            <p className="mt-2 text-sm font-medium text-neutral-400">
               Enterprise CRM Management System
             </p>
           </div>
@@ -78,13 +78,13 @@ export function LoginForm() {
           <div className="login-glass-card rounded-3xl p-8 sm:p-9">
             <div className="mb-7">
               <div className="mb-1 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-amber-300" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-amber-300">
+                <ShieldCheck className="h-4 w-4 text-neutral-300" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-neutral-300">
                   Secure Access
                 </span>
               </div>
               <h2 className="mt-2 text-2xl font-bold text-white">Welcome back</h2>
-              <p className="mt-1.5 text-sm text-slate-400">
+              <p className="mt-1.5 text-sm text-neutral-400">
                 Sign in to access your Elite Estate CRM dashboard
               </p>
             </div>

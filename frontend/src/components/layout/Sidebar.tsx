@@ -1,6 +1,7 @@
 'use client';
 
-import { Building2, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { CompanyLogo } from '@/components/common/CompanyLogo';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -35,8 +36,8 @@ function SidebarContent({
       >
         {!collapsed && (
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Building2 className="h-5 w-5 shrink-0" />
+            <div className="h-12 w-9 shrink-0 rounded-md bg-white p-0.5 flex items-center justify-center">
+              <CompanyLogo />
             </div>
             <div>
               <p className="text-sm font-bold text-sidebar-foreground leading-tight">
@@ -50,8 +51,8 @@ function SidebarContent({
           <CloseButton onClick={onNavClick} className="ml-auto shrink-0" />
         )}
         {collapsed && (
-          <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-            <Building2 className="h-5 w-5 shrink-0" />
+          <div className="h-12 w-9 shrink-0 rounded-md bg-white p-0.5 flex items-center justify-center">
+            <CompanyLogo />
           </div>
         )}
         <button

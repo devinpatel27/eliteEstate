@@ -9,7 +9,7 @@ type ActionTone = 'blue' | 'sky' | 'green' | 'violet' | 'amber';
 
 const toneStyles: Record<ActionTone, string> = {
   blue:
-    'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 hover:text-blue-700 hover:shadow-blue-500/20 dark:bg-blue-500/15 dark:text-blue-400',
+    'bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary hover:shadow-primary/20',
   sky:
     'bg-sky-500/10 text-sky-600 hover:bg-sky-500/20 hover:text-sky-700 hover:shadow-sky-500/20 dark:bg-sky-500/15 dark:text-sky-400',
   green:

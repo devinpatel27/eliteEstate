@@ -83,7 +83,7 @@ export function Header() {
             >
               <Avatar className="h-9 w-9 border-2 border-background shadow-md ring-1 ring-border/60">
                 <AvatarImage src={getImageUrl(user?.profileImage)} alt={user?.name} className="object-cover" />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600">
+                <AvatarFallback className="bg-primary">
                   <User className="h-4 w-4 text-white" strokeWidth={2.25} />
                 </AvatarFallback>
               </Avatar>

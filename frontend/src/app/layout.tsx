@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: 'Elite Estate CRM',
   description: 'Enterprise Real Estate CRM System',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
+    icon: '/elite-estate-logo.png',
+    shortcut: '/elite-estate-logo.png',
   },
 };
 

@@ -48,7 +48,7 @@ const DatePickerTrigger = forwardRef<HTMLButtonElement, TriggerProps>(
       )}
       {...props}
     >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/15 to-indigo-500/10 ring-1 ring-primary/10">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/10">
         <CalendarDays className="h-3.5 w-3.5 text-primary" strokeWidth={2.25} />
       </span>
       <span className="truncate text-sm">{valueLabel || placeholder}</span>
