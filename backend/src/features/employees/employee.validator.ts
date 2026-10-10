@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const joiningDateSchema = z.string().refine(value => value === '' || !Number.isNaN(Date.parse(value)), 'Invalid joining date').optional();
+
 export const createEmployeeSchema = z.object({
   body: z.object({
     name: z.string().min(2, 'Name must be at least 2 characters').trim(),
@@ -17,7 +19,7 @@ export const createEmployeeSchema = z.object({
     city: z.string().optional(),
     state: z.string().optional(),
     pincode: z.string().optional(),
-    joiningDate: z.string().optional(),
+    joiningDate: joiningDateSchema,
     status: z.enum(['active', 'inactive']).default('active'),
   }),
 });
@@ -32,7 +34,7 @@ export const updateEmployeeSchema = z.object({
     city: z.string().optional(),
     state: z.string().optional(),
     pincode: z.string().optional(),
-    joiningDate: z.string().optional(),
+    joiningDate: joiningDateSchema,
     status: z.enum(['active', 'inactive']).optional(),
   }),
   params: z.object({

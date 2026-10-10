@@ -1,18 +1,8 @@
 import { UserModel } from '../models/User.model';
 
 export const generateEmployeeId = async (): Promise<string> => {
-  const lastEmployee = await UserModel.findOne(
-    { employeeId: { $exists: true, $ne: 'EMP000' } },
-    { employeeId: 1 },
-    { sort: { createdAt: -1 } }
-  );
-
-  if (!lastEmployee?.employeeId || lastEmployee.employeeId === 'EMP000') {
-    const count = await UserModel.countDocuments({ employeeId: { $ne: 'EMP000' } });
-    return `EMP${String(count + 1).padStart(3, '0')}`;
-  }
-
-  const lastNumber = parseInt(lastEmployee.employeeId.replace('EMP', ''), 10);
+  const employees = await UserModel.find({ employeeId: { $regex: /^EMP\d+$/ } }).select('employeeId');
+  const lastNumber = employees.reduce((max, user) => Math.max(max, Number(/^EMP(\d+)$/.exec(user.employeeId)?.[1] || 0)), 0);
   const nextNumber = lastNumber + 1;
   return `EMP${String(nextNumber).padStart(3, '0')}`;
 };

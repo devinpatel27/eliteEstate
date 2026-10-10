@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { CreateEmployeeInput, UpdateEmployeeInput } from './employee.validator';
 import path from 'path';
 import fs from 'fs';
+import { isAdminRole, resolveEmployeeRole, assertAdminAssignmentAllowed } from './employee.admin';
 
 export const employeeService = {
   listEmployees: async (req: Request) => {
@@ -46,6 +47,7 @@ export const employeeService = {
 
     const roleExists = await RoleModel.findById(data.role);
     if (!roleExists) throw new AppError('Invalid role selected', 400);
+    await assertAdminAssignmentAllowed(roleExists, createdBy);
 
     if (roleExists.roleName !== 'master_admin') {
       const masterRoles = await RoleModel.find({ roleName: 'master_admin' }).select('_id');
@@ -103,6 +105,7 @@ export const employeeService = {
     if (data.role) {
       const roleExists = await RoleModel.findById(data.role);
       if (!roleExists) throw new AppError('Invalid role selected', 400);
+      await assertAdminAssignmentAllowed(roleExists, updatedBy);
     }
 
     const updateData: Record<string, unknown> = { ...data };
@@ -131,6 +134,7 @@ export const employeeService = {
   deleteEmployee: async (id: string, deletedBy: string, ipAddress?: string) => {
     const employee = await employeeRepository.findById(id);
     if (!employee) throw new AppError('Employee not found', 404);
+    if (isAdminRole(await resolveEmployeeRole(employee.role))) throw new AppError('Admin accounts cannot be deleted', 403);
 
     if (employee._id.toString() === deletedBy) {
       throw new AppError('You cannot delete your own account', 400);

@@ -32,7 +32,7 @@ export const employeeRepository = {
 
     const [data, total] = await Promise.all([
       UserModel.find(query)
-        .populate('role', 'roleName')
+        .populate('role', 'roleName permissions')
         .populate('createdBy', 'name')
         .sort({ [sortField]: sortDir })
         .skip(options.skip)

@@ -105,7 +105,7 @@ export function EmployeeForm({
             city: employee.city || '',
             state: employee.state || '',
             pincode: employee.pincode || '',
-            joiningDate: employee.joiningDate
+            joiningDate: employee.joiningDate && !Number.isNaN(new Date(employee.joiningDate).getTime())
               ? new Date(employee.joiningDate).toISOString().split('T')[0]
               : '',
             status: employee.status,

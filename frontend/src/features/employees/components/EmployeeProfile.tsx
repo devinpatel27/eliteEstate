@@ -59,7 +59,7 @@ export function EmployeeProfile({ employee }: EmployeeProfileProps) {
   const [showReset, setShowReset] = useState(false);
 
   const canEdit = hasPermission(PERMISSIONS.EMPLOYEE_UPDATE);
-  const canDelete = hasPermission(PERMISSIONS.EMPLOYEE_DELETE);
+  const canDelete = hasPermission(PERMISSIONS.EMPLOYEE_DELETE) && !['admin', 'master_admin'].includes(employee.role?.roleName) && !employee.role?.permissions?.includes('*');
   const canManage = hasPermission(PERMISSIONS.EMPLOYEE_MANAGE);
 
   const fullAddress = [

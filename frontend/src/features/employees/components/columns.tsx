@@ -189,7 +189,7 @@ export function getEmployeeColumns(actions: ColumnActions): ColumnDef<Employee>[
                       </DropdownMenuItem>
                     </>
                   )}
-                  {actions.canDelete && (
+                  {actions.canDelete && !['admin', 'master_admin'].includes(emp.role?.roleName) && !emp.role?.permissions?.includes('*') && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem

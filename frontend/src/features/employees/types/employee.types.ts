@@ -7,6 +7,7 @@ export interface Employee {
   role: {
     _id: string;
     roleName: string;
+    permissions?: string[];
   };
   profileImage?: string;
   address?: string;
