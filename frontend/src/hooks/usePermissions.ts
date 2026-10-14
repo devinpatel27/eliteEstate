@@ -7,7 +7,11 @@ export function usePermissions() {
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isReady = isHydrated || isAuthenticated;
-  const permissions = useAuthStore((s) => s.user?.permissions ?? EMPTY_PERMISSIONS);
+  const storedPermissions = useAuthStore((s) => s.user?.permissions ?? EMPTY_PERMISSIONS);
+  const role = useAuthStore((s) => s.user?.role);
+  const permissions = role === 'employee'
+    ? [...new Set([...storedPermissions, PERMISSIONS.LEAD_CREATE, PERMISSIONS.LEAD_STATUS_UPDATE])]
+    : storedPermissions;
 
   const hasPermission = (permission: string): boolean => {
     if (permissions.includes('*')) return true;

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.utils';
 import { AppError } from './error.middleware';
+import { employeeLeadPermissions } from '../constants/permissions';
 
 export const authenticate = (
   req: Request,
@@ -17,6 +18,7 @@ export const authenticate = (
 
   try {
     const decoded = verifyToken(token);
+    decoded.permissions = employeeLeadPermissions(decoded.role, decoded.permissions);
     req.user = decoded;
     next();
   } catch {

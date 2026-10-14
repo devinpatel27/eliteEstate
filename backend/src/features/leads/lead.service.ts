@@ -160,6 +160,7 @@ export const leadService = {
         assignedTo: new Types.ObjectId(data.assignedTo),
         currentAssignmentId: assignment._id,
         assignedAt: now,
+        sharePreviousRemarks: data.assignedTo === userId,
       });
 
       await leadRepository.createActivity({

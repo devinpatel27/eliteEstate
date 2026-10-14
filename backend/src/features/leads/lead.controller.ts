@@ -59,7 +59,10 @@ export const leadController = {
   create: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (req.body.assignedTo && !isLeadAdmin(req.user!.permissions)) throw new AppError('Only an admin can assign leads', 403);
-      const lead = await leadService.create(req.body, req.user!.userId, req.ip);
+      const data = isLeadAdmin(req.user!.permissions)
+        ? req.body
+        : { ...req.body, assignedTo: req.user!.userId, sharePreviousRemarks: true };
+      const lead = await leadService.create(data, req.user!.userId, req.ip);
       sendCreated(res, 'Lead created successfully', lead);
     } catch (error) {
       next(error);

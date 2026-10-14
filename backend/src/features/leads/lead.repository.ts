@@ -37,19 +37,17 @@ export interface ListLeadOptions {
 const populateFields =
   'customerName mobile alternateMobile email city address category propertyType propertyConfiguration leadSource budgetMin budgetMax preferredArea priority status initialRemark assignedTo currentAssignmentId assignedAt nextFollowUpDate leadId createdAt updatedAt notes sharePreviousRemarks remarksRestrictedAt';
 
-function getScheduleDateRanges(now = new Date()) {
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(now);
-  endOfDay.setHours(23, 59, 59, 999);
-  const tomorrowStart = new Date(startOfDay);
-  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-  const tomorrowEnd = new Date(tomorrowStart);
-  tomorrowEnd.setHours(23, 59, 59, 999);
+export function getScheduleDateRanges(now = new Date()) {
+  const offset = 330 * 60 * 1000;
+  const local = new Date(now.getTime() + offset);
+  const startOfDay = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) - offset);
+  const endOfDay = new Date(startOfDay.getTime() + 86400000 - 1);
+  const tomorrowStart = new Date(startOfDay.getTime() + 86400000);
+  const tomorrowEnd = new Date(tomorrowStart.getTime() + 86400000 - 1);
   return { startOfDay, endOfDay, tomorrowStart, tomorrowEnd };
 }
 
-function buildFollowUpDueClause(type: 'today' | 'tomorrow' | 'overdue', now = new Date()): FilterQuery<ILead> {
+export function buildFollowUpDueClause(type: 'today' | 'tomorrow' | 'overdue', now = new Date()): FilterQuery<ILead> {
   const { startOfDay, endOfDay, tomorrowStart, tomorrowEnd } = getScheduleDateRanges(now);
 
   if (type === 'today') {
@@ -65,8 +63,8 @@ function buildFollowUpDueClause(type: 'today' | 'tomorrow' | 'overdue', now = ne
     };
   }
   return {
-    nextFollowUpDate: { $lt: startOfDay },
-    status: 'open',
+    nextFollowUpDate: { $ne: null, $exists: true, $lt: startOfDay },
+    status: { $in: ACTIVE_LEAD_STATUSES },
   };
 }
 
@@ -83,12 +81,12 @@ async function getLeadIdsWithScheduledVisitsDue(
   } else if (type === 'tomorrow') {
     visitQuery.scheduledDate = { $gte: tomorrowStart, $lte: tomorrowEnd };
   } else {
-    visitQuery.scheduledDate = { $lt: startOfDay };
+    visitQuery.scheduledDate = { $ne: null, $exists: true, $lt: startOfDay };
   }
 
   const activeLeadFilter: FilterQuery<ILead> = {
     deletedAt: null,
-    status: type === 'overdue' ? 'open' : { $in: ACTIVE_LEAD_STATUSES },
+    status: { $in: ACTIVE_LEAD_STATUSES },
   };
 
   if (options.assignedOnly && options.assignedToUserId) {
@@ -326,7 +324,7 @@ export const leadRepository = {
 
     if (options.followUpDue) {
       if (!query.status) {
-        query.status = options.followUpDue === 'overdue' ? 'open' : { $in: ACTIVE_LEAD_STATUSES };
+        query.status = { $in: ACTIVE_LEAD_STATUSES };
       }
       const now = new Date();
       const visitLeadIds = await getLeadIdsWithScheduledVisitsDue(options.followUpDue, options, now);
@@ -336,7 +334,7 @@ export const leadRepository = {
       if (visitLeadIds.length > 0) {
         scheduleConditions.push({
           _id: { $in: visitLeadIds },
-          status: options.followUpDue === 'overdue' ? 'open' : { $in: ACTIVE_LEAD_STATUSES },
+          status: { $in: ACTIVE_LEAD_STATUSES },
         });
       }
       applyScheduleDueFilter(query, scheduleConditions);
@@ -533,29 +531,7 @@ export const leadRepository = {
   },
 
   countFollowUpsDue: async (filter: FilterQuery<ILead>, date: Date, type: 'today' | 'tomorrow' | 'overdue') => {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const tomorrowStart = new Date(startOfDay);
-    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-    const tomorrowEnd = new Date(tomorrowStart);
-    tomorrowEnd.setHours(23, 59, 59, 999);
-
-    const baseQuery: FilterQuery<ILead> = {
-      ...filter,
-      deletedAt: null,
-      status: { $in: ACTIVE_LEAD_STATUSES },
-    };
-
-    if (type === 'today') {
-      baseQuery.nextFollowUpDate = { $gte: startOfDay, $lte: endOfDay };
-    } else if (type === 'tomorrow') {
-      baseQuery.nextFollowUpDate = { $gte: tomorrowStart, $lte: tomorrowEnd };
-    } else {
-      baseQuery.nextFollowUpDate = { $lt: startOfDay };
-    }
+    const baseQuery: FilterQuery<ILead> = { ...filter, deletedAt: null, ...buildFollowUpDueClause(type, date) };
 
     return LeadModel.countDocuments(baseQuery);
   },

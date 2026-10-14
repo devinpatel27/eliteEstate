@@ -5,6 +5,7 @@ import { logActivity } from '../../utils/activityLogger';
 import { AppError } from '../../middleware/error.middleware';
 import { IRole } from '../../models/Role.model';
 import { LoginInput, ChangePasswordInput } from './auth.validator';
+import { employeeLeadPermissions } from '../../constants/permissions';
 
 export const authService = {
   login: async (data: LoginInput, ipAddress?: string) => {
@@ -35,7 +36,7 @@ export const authService = {
       email: user.email,
       role: role.roleName,
       roleId: role._id.toString(),
-      permissions: role.permissions,
+      permissions: employeeLeadPermissions(role.roleName, role.permissions),
     });
 
     await logActivity({
@@ -55,7 +56,7 @@ export const authService = {
         email: user.email,
         role: role.roleName,
         roleId: role._id,
-        permissions: role.permissions,
+        permissions: employeeLeadPermissions(role.roleName, role.permissions),
         profileImage: user.profileImage,
         forcePasswordChange: user.forcePasswordChange,
       },
@@ -76,7 +77,7 @@ export const authService = {
       mobile: user.mobile,
       role: role.roleName,
       roleId: role._id,
-      permissions: role.permissions,
+      permissions: employeeLeadPermissions(role.roleName, role.permissions),
       profileImage: user.profileImage,
       address: user.address,
       city: user.city,
