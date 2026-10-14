@@ -9,6 +9,7 @@ import { canReadAllLeads, requiresAssignedOnlyScope } from '../leads/lead.access
 import { ACTIVE_LEAD_STATUSES } from '../../constants/lead.constants';
 import { isValidObjectId, toObjectId, resolveRefId } from '../../utils/objectId.utils';
 import { PERMISSIONS } from '../../constants/permissions';
+import { buildFollowUpDueClause, getScheduleDateRanges } from '../leads/lead.repository';
 
 type DateBucket = 'today' | 'tomorrow' | 'due';
 
@@ -22,39 +23,14 @@ const PERFORMANCE_GROUPS = {
   dealLost: ['closed'],
 } as const;
 
-function getDateRanges(now = new Date()) {
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(now);
-  endOfDay.setHours(23, 59, 59, 999);
+const getDateRanges = getScheduleDateRanges;
 
-  const tomorrowStart = new Date(startOfDay);
-  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-  const tomorrowEnd = new Date(tomorrowStart);
-  tomorrowEnd.setHours(23, 59, 59, 999);
-
-  return { startOfDay, endOfDay, tomorrowStart, tomorrowEnd };
+export function buildFollowUpDateQuery(bucket: DateBucket, now = new Date()): FilterQuery<ILead> {
+  return buildFollowUpDueClause(bucket === 'due' ? 'overdue' : bucket, now);
 }
-
-function buildFollowUpDateQuery(bucket: DateBucket, now = new Date()): FilterQuery<ILead> {
+export function buildVisitDateQuery(bucket: DateBucket, now = new Date()): FilterQuery<IVisit> {
   const { startOfDay, endOfDay, tomorrowStart, tomorrowEnd } = getDateRanges(now);
-  const baseStatus = { status: 'open' };
-
-  if (bucket === 'today') {
-    return { nextFollowUpDate: { $gte: startOfDay, $lte: endOfDay }, ...baseStatus };
-  }
-  if (bucket === 'tomorrow') {
-    return { nextFollowUpDate: { $gte: tomorrowStart, $lte: tomorrowEnd }, ...baseStatus };
-  }
-  return {
-    nextFollowUpDate: { $lt: startOfDay },
-    ...baseStatus,
-  };
-}
-
-function buildVisitDateQuery(bucket: DateBucket, now = new Date()): FilterQuery<IVisit> {
-  const { startOfDay, endOfDay, tomorrowStart, tomorrowEnd } = getDateRanges(now);
-  const base: FilterQuery<IVisit> = { status: 'scheduled' };
+  const base: FilterQuery<IVisit> = { status: 'scheduled', source: { $ne: 'follow_up' } };
 
   if (bucket === 'today') {
     return { ...base, scheduledDate: { $gte: startOfDay, $lte: endOfDay } };
@@ -62,13 +38,13 @@ function buildVisitDateQuery(bucket: DateBucket, now = new Date()): FilterQuery<
   if (bucket === 'tomorrow') {
     return { ...base, scheduledDate: { $gte: tomorrowStart, $lte: tomorrowEnd } };
   }
-  return { ...base, scheduledDate: { $lt: startOfDay } };
+  return { ...base, scheduledDate: { $ne: null, $exists: true, $lt: startOfDay } };
 }
 
 async function getLeadIdsForAssignee(userId: string): Promise<Types.ObjectId[]> {
   const assignedTo = toObjectId(userId);
   if (!assignedTo) return [];
-  const leads = await LeadModel.find({ assignedTo, deletedAt: null, status: 'open' }).select('_id').lean();
+  const leads = await LeadModel.find({ assignedTo, deletedAt: null, status: { $in: ACTIVE_LEAD_STATUSES } }).select('_id').lean();
   return leads.map((l) => l._id as Types.ObjectId);
 }
 
@@ -89,7 +65,7 @@ function resolveTargetUserId(user: JwtPayload, employeeId?: string): string {
 }
 
 async function buildLeadFilter(userId: string, isScopedToUser: boolean): Promise<FilterQuery<ILead>> {
-  const filter: FilterQuery<ILead> = { deletedAt: null, status: 'open' };
+  const filter: FilterQuery<ILead> = { deletedAt: null, status: { $in: ACTIVE_LEAD_STATUSES } };
   if (isScopedToUser) {
     const assignedTo = toObjectId(userId);
     if (!assignedTo) return { _id: { $in: [] } };
@@ -99,7 +75,7 @@ async function buildLeadFilter(userId: string, isScopedToUser: boolean): Promise
 }
 
 async function buildVisitLeadFilter(userId: string, isScopedToUser: boolean): Promise<FilterQuery<IVisit>> {
-  const leadQuery: FilterQuery<ILead> = { deletedAt: null, status: 'open' };
+  const leadQuery: FilterQuery<ILead> = { deletedAt: null, status: { $in: ACTIVE_LEAD_STATUSES } };
   if (isScopedToUser) {
     const assignedTo = toObjectId(userId);
     if (!assignedTo) return { leadId: { $in: [] } };
@@ -124,7 +100,7 @@ async function getEmployeeScheduleCounts(employeeId: string, now = new Date()) {
     };
   }
 
-  const leadFilter = { deletedAt: null, assignedTo, status: 'open' };
+  const leadFilter = { deletedAt: null, assignedTo, status: { $in: ACTIVE_LEAD_STATUSES } };
   const visitFilter = await buildVisitLeadFilter(employeeId, true);
 
   const buckets: DateBucket[] = ['today', 'tomorrow', 'due'];

@@ -74,7 +74,8 @@ async function getLeadIdsWithScheduledVisitsDue(
   now = new Date()
 ): Promise<Types.ObjectId[]> {
   const { startOfDay, endOfDay, tomorrowStart, tomorrowEnd } = getScheduleDateRanges(now);
-  const visitQuery: FilterQuery<IVisit> = { status: 'scheduled' };
+  // Follow-up visits record the discussion's activity date, not a pending appointment.
+  const visitQuery: FilterQuery<IVisit> = { status: 'scheduled', source: { $ne: 'follow_up' } };
 
   if (type === 'today') {
     visitQuery.scheduledDate = { $gte: startOfDay, $lte: endOfDay };

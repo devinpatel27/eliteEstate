@@ -1,6 +1,6 @@
 import { FilterQuery, Types } from 'mongoose';
 import { assertValidAssignee } from './lead.assignment';
-import { leadRepository } from './lead.repository';
+import { leadRepository, getScheduleDateRanges } from './lead.repository';
 import {
   getLeadAccessScope,
   isLeadAdmin,
@@ -687,17 +687,10 @@ export const leadService = {
 
   getLeadStats: async (user: JwtPayload) => {
     const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
-    const tomorrowStart = new Date(startOfDay);
-    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-    const tomorrowEnd = new Date(tomorrowStart);
-    tomorrowEnd.setHours(23, 59, 59, 999);
+    const { startOfDay, endOfDay, tomorrowStart, tomorrowEnd } = getScheduleDateRanges(now);
 
     const baseFilter: Record<string, unknown> = {};
-    let visitLeadFilter: Record<string, unknown> = { status: 'scheduled' };
+    let visitLeadFilter: Record<string, unknown> = { status: 'scheduled', source: { $ne: 'follow_up' } };
 
     if (requiresAssignedOnlyScope(user.permissions)) {
       const assignedTo = toObjectId(user.userId);
@@ -724,6 +717,7 @@ export const leadService = {
       const leadIds = await LeadModel.find({ assignedTo, deletedAt: null, status: { $in: ACTIVE_LEAD_STATUSES } }).select('_id').lean();
       visitLeadFilter = {
         status: 'scheduled',
+        source: { $ne: 'follow_up' },
         leadId: { $in: leadIds.map((l) => l._id) },
       };
     }
@@ -773,7 +767,7 @@ export const leadService = {
       }),
       VisitModel.countDocuments({
         ...visitLeadFilter,
-        scheduledDate: { $lt: startOfDay },
+        scheduledDate: { $ne: null, $exists: true, $lt: startOfDay },
       }),
       leadRepository.countByFilter({ ...baseFilter, status: 'closed' }),
       leadRepository.countByFilter({ ...baseFilter, status: 'closed' }),
