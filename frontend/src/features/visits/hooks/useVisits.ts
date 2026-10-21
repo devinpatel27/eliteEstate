@@ -8,7 +8,7 @@ import { Visit, VisitListParams } from '../types/visit.types';
 
 export function useVisitList(initialParams: VisitListParams = {}) {
   const queryClient = useQueryClient();
-  const [params, setParams] = useState<VisitListParams>({ page: 1, limit: 10, ...initialParams });
+  const [params, setParams] = useState<VisitListParams>({ page: 1, limit: 25, ...initialParams });
 
   const queryKey = ['visits', params];
 
@@ -49,6 +49,7 @@ export function useVisitList(initialParams: VisitListParams = {}) {
       patchVisit(visit._id, { isFavorite: nextFavorite });
       try {
         await visitService.toggleFavorite(visit._id);
+        await queryClient.invalidateQueries({queryKey: ['visits']});
       } catch {
         patchVisit(visit._id, { isFavorite: visit.isFavorite });
         toast.error('Failed to update favorite');

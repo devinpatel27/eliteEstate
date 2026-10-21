@@ -168,6 +168,8 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
 
   const clearFilters = () => {
     updateParams({
+      parentActivity: undefined,
+      childActivity: undefined,
       followUpDue: undefined,
       status: 'open',
       priority: undefined,
@@ -183,7 +185,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
   };
 
   const hasActiveFilter = Boolean(
-    params.followUpDue ||
+    params.parentActivity || params.childActivity || params.followUpDue ||
     (params.status && params.status !== 'open') ||
     params.priority ||
     params.category ||
@@ -338,7 +340,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
         data={leads}
         totalCount={totalCount}
         pageIndex={(params.page ?? 1) - 1}
-        pageSize={params.limit ?? 10}
+        pageSize={params.limit ?? 25}
         pageCount={pageCount}
         enableRowSelection
         selectedRows={rowSelection}

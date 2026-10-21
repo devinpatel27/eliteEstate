@@ -24,6 +24,7 @@ export interface Lead {
   customerName: string;
   mobile: string;
   alternateMobile?: string;
+  alternateMobiles?: string[];
   email?: string;
   city?: string;
   address?: string;
@@ -107,6 +108,8 @@ export interface LeadListParams {
   dateTo?: string;
   nfdFrom?: string;
   nfdTo?: string;
+  parentActivity?: string;
+  childActivity?: string;
   followUpDue?: 'today' | 'tomorrow' | 'overdue';
 }
 
@@ -114,6 +117,7 @@ export interface CreateLeadData {
   customerName: string;
   mobile: string;
   alternateMobile?: string;
+  alternateMobiles?: string[];
   email?: string;
   city?: string;
   address?: string;

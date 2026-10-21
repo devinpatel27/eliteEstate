@@ -1,3 +1,4 @@
+import { notifyLeadVisitChanged } from '@/lib/lead-visit-sync';
 import api from '@/lib/axios';
 import { ApiResponse, PaginatedResponse } from '@/types/api.types';
 import { Visit, VisitDetail, VisitHistory, VisitListParams, CreateVisitData } from '../types/visit.types';
@@ -19,21 +20,25 @@ export const visitService = {
 
   create: async (data: CreateVisitData): Promise<ApiResponse<Visit>> => {
     const res = await api.post('/visits', data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   update: async (id: string, data: Partial<CreateVisitData & { status: string }>): Promise<ApiResponse<Visit>> => {
     const res = await api.patch(`/visits/${id}`, data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   toggleFavorite: async (id: string): Promise<ApiResponse<Visit>> => {
     const res = await api.patch(`/visits/${id}/favorite`);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   addHistory: async (id: string, data: { action?: string; remark: string }): Promise<ApiResponse<VisitHistory[]>> => {
     const res = await api.post(`/visits/${id}/history`, data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 };

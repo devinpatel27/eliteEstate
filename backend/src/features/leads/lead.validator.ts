@@ -17,7 +17,8 @@ export const createLeadSchema = z.object({
   body: z.object({
     customerName: z.string().min(2, 'Customer name is required').trim(),
     mobile: mobileSchema,
-    alternateMobile: z.string().optional(),
+    alternateMobile: z.string().refine(value => !value || /^[6-9]\d{9}$/.test(value), 'Enter a valid 10-digit mobile').optional(),
+    alternateMobiles: z.array(z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile')).max(3).optional(),
     email: z.string().email('Invalid email').optional().or(z.literal('')),
     city: z.string().optional(),
     address: z.string().optional(),
@@ -39,7 +40,8 @@ export const updateLeadSchema = z.object({
   body: z.object({
     customerName: z.string().min(2).trim().optional(),
     mobile: mobileSchema.optional(),
-    alternateMobile: z.string().optional(),
+    alternateMobile: z.string().refine(value => !value || /^[6-9]\d{9}$/.test(value), 'Enter a valid 10-digit mobile').optional(),
+    alternateMobiles: z.array(z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile')).max(3).optional(),
     email: z.string().email().optional().or(z.literal('')),
     city: z.string().optional(),
     address: z.string().optional(),
@@ -73,6 +75,8 @@ export const listLeadsSchema = z.object({
     dateTo: z.string().optional(),
     nfdFrom: z.string().optional(),
     nfdTo: z.string().optional(),
+    parentActivity: z.string().optional(),
+    childActivity: z.string().optional(),
     followUpDue: z.enum(['today', 'tomorrow', 'overdue']).optional(),
   }),
 });

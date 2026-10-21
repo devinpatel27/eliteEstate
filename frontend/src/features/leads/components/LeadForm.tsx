@@ -84,6 +84,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
   const [areas, setAreas] = useState<string[]>([]);
   const [duplicateLead, setDuplicateLead] = useState<Lead | null>(null);
   const [closedLeads, setClosedLeads] = useState<Lead[]>([]);
+  const [contactChecks, setContactChecks] = useState<Record<string, string>>({});
   const [mobileCheckStatus, setMobileCheckStatus] = useState<MobileCheckStatus>('idle');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -100,6 +101,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
       customerName: lead.customerName,
       mobile: lead.mobile,
       alternateMobile: lead.alternateMobile || '',
+      alternateMobiles: lead.alternateMobiles || [],
       email: lead.email || '',
       city: lead.city || '',
       address: lead.address || '',
@@ -115,15 +117,15 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
       priority: lead.priority,
       initialRemark: lead.initialRemark || '',
     } : {
-      customerName: '', mobile: '', alternateMobile: '', email: '', city: '', address: '',
+      customerName: '', mobile: '', alternateMobile: '', alternateMobiles: [], email: '', city: '', address: '',
       category: 'buy_property', propertyType: '', propertyConfiguration: '', leadSource: '', preferredArea: '',
       assignedTo: '', priority: 'warm', nextFollowUpDate: '', initialRemark: '',
     },
   });
   const budgetOptions = form.watch('category') === 'rent_property' ? RENT_BUDGET_OPTIONS : BUDGET_RANGE_OPTIONS;
   const canAssign = canAssignOnCreate && hasPermission(PERMISSIONS.LEAD_TRANSFER);
-  const watchedMobile = form.watch('mobile');
-  const debouncedMobile = useDebounce(watchedMobile, 350);
+  const watchedNumbers = JSON.stringify([form.watch('mobile'), form.watch('alternateMobile'), ...(form.watch('alternateMobiles') || [])]);
+  const debouncedMobile = useDebounce(watchedNumbers, 350);
 
   useEffect(() => {
     const loaders: Promise<unknown>[] = [
@@ -161,46 +163,26 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
   const selectedPropertyType = propertyTypes.find((item) => item._id === form.watch('propertyType'));
   const configurationOptions = getConfigurationOptions(selectedPropertyType?.name);
 
-  const verifyMobile = async (mobile: string) => {
-    const normalized = normalizeMobileInput(mobile);
-    if (mode !== 'create') return;
-    if (!normalized) {
-      setDuplicateLead(null);
-      setClosedLeads([]);
-      setMobileCheckStatus('idle');
-      return;
-    }
-    if (normalized.length < 10) {
-      setDuplicateLead(null);
-      setClosedLeads([]);
-      setMobileCheckStatus('invalid');
-      return;
-    }
-
-    setMobileCheckStatus('checking');
-    try {
-      const res = await leadService.checkMobile(normalized);
-      if (res.success) {
-        const active = res.data?.activeLead || null;
-        const closed = res.data?.closedLeads || [];
-        setDuplicateLead(active);
-        setClosedLeads(closed);
-        setMobileCheckStatus(active ? 'duplicate' : 'available');
-      } else {
-        setDuplicateLead(null);
-        setClosedLeads([]);
-        setMobileCheckStatus('available');
-      }
-    } catch {
-      setDuplicateLead(null);
-      setClosedLeads([]);
-      setMobileCheckStatus('idle');
-    }
-  };
-
   useEffect(() => {
-    verifyMobile(debouncedMobile || '');
-  }, [debouncedMobile]);
+    if (mode !== 'create') return;
+    let cancelled = false;
+    const numbers = (JSON.parse(debouncedMobile) as string[]).filter(Boolean).map(normalizeMobileInput);
+    setDuplicateLead(null);
+    setClosedLeads([]);
+    setContactChecks({});
+    if (!numbers.length) { setMobileCheckStatus('idle'); return; }
+    if (numbers.some(number => !/^[6-9]\d{9}$/.test(number))) { setMobileCheckStatus('invalid'); return; }
+    setMobileCheckStatus('checking');
+    Promise.all(numbers.map(number => leadService.checkMobile(number))).then(results => {
+      if (cancelled) return;
+      setContactChecks(Object.fromEntries(results.map((result, index) => [numbers[index], result.data?.activeLead ? 'Lead already exists for this number' : (result.data?.closedLeads?.length ? 'Previous closed lead found for this number' : 'Number available')])));
+      const active = results.find(result => result.data?.activeLead)?.data?.activeLead || null;
+      setDuplicateLead(active);
+      setClosedLeads(Array.from(new Map(results.flatMap(result => result.data?.closedLeads || []).map(item => [item._id, item])).values()));
+      setMobileCheckStatus(active ? 'duplicate' : 'available');
+    }).catch(() => { if (!cancelled) setMobileCheckStatus('idle'); });
+    return () => { cancelled = true; };
+  }, [debouncedMobile, mode]);
 
   const normalizeNumberField = (value: string) => value.replace(/\D/g, '').slice(-10);
 
@@ -214,7 +196,7 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
 
   const onSubmit = async (values: CreateLeadFormValues) => {
     if (duplicateLead && mode === 'create') {
-      toast.error('Lead already exists for this mobile number');
+      toast.error('Lead already exists for one of these contact numbers');
       return;
     }
     setIsSubmitting(true);
@@ -222,7 +204,8 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
       const payload = {
         ...values,
         mobile: normalizeMobileInput(values.mobile),
-        alternateMobile: values.alternateMobile ? normalizeMobileInput(values.alternateMobile) : undefined,
+        alternateMobiles: (values.alternateMobiles || []).filter(Boolean).map(normalizeMobileInput),
+        alternateMobile: values.alternateMobile ? normalizeMobileInput(values.alternateMobile) : '',
         propertyConfiguration: values.propertyConfiguration || undefined,
         budgetMin: values.budgetMin === '' || values.budgetMin === undefined ? undefined : Number(values.budgetMin),
         budgetMax: values.budgetMax === '' || values.budgetMax === undefined ? undefined : Number(values.budgetMax),
@@ -310,26 +293,26 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                     onChange={(e) => field.onChange(normalizeNumberField(e.target.value))}
                     onBlur={(e) => {
                       field.onBlur();
-                      verifyMobile(e.target.value);
+
                     }}
                   />
                 </FormControl>
                 {mode === 'create' && mobileCheckStatus === 'checking' && (
                   <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Checking mobile number...
+                    Checking all contact numbers...
                   </p>
                 )}
                 {mode === 'create' && mobileCheckStatus === 'available' && (
                   <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    Number available for new lead
+                    Contact numbers available for new lead
                   </p>
                 )}
                 {mode === 'create' && mobileCheckStatus === 'duplicate' && (
                   <p className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
                     <AlertCircle className="h-3.5 w-3.5" />
-                    Lead already exists for this mobile number
+                    Lead already exists for one of these contact numbers
                   </p>
                 )}
                 <FormMessage />
@@ -349,9 +332,21 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                     onChange={(e) => field.onChange(normalizeNumberField(e.target.value))}
                   />
                 </FormControl>
+                {mode === 'create' && field.value && <p className="text-xs text-muted-foreground">{contactChecks[field.value] || (mobileCheckStatus === 'checking' ? 'Checking alternate number...' : 'Enter a valid 10-digit number')}</p>}
                 <FormMessage />
               </FormItem>
             )} />
+            <div className="space-y-2">
+              {(form.watch('alternateMobiles') || []).map((_: string, index: number) => (
+                <FormField key={index} control={form.control} name={`alternateMobiles.${index}`} render={({ field }) => (
+                  <FormItem><FormLabel>Alternate mobile {index + 2}</FormLabel><div className="flex gap-2">
+                    <FormControl><Input className="crm-input" inputMode="numeric" maxLength={10} {...field} onChange={event => field.onChange(normalizeNumberField(event.target.value))} /></FormControl>
+                    <Button type="button" variant="outline" aria-label={`Remove alternate mobile ${index + 2}`} onClick={() => form.setValue('alternateMobiles', (form.getValues('alternateMobiles') || []).filter((_: string, i: number) => i !== index))}>×</Button>
+                  </div>{mode === 'create' && field.value && <p className="text-xs text-muted-foreground">{contactChecks[field.value] || (mobileCheckStatus === 'checking' ? 'Checking number...' : 'Enter a valid 10-digit number')}</p>}<FormMessage /></FormItem>
+                )} />
+              ))}
+              <Button type="button" size="sm" variant="outline" disabled={(form.watch('alternateMobiles') || []).length >= 3 || isSubmitting} onClick={() => form.setValue('alternateMobiles', [...(form.getValues('alternateMobiles') || []), ''])}>+ Add alternate number</Button>
+            </div>
             <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
@@ -509,7 +504,8 @@ export function LeadForm({ lead, mode, variant = 'page', onSuccess, onCancel }: 
                     {(['budgetMin', 'budgetMax'] as const).map(name => (
                       <FormField key={name} control={form.control} name={name} render={({ field }) => (
                         <FormItem><FormLabel>{name === 'budgetMin' ? 'Minimum budget (₹)' : 'Maximum budget (₹)'}</FormLabel>
-                          <FormControl><Input type="number" min={0} disabled={isSubmitting} value={field.value ?? ''} onChange={event => field.onChange(event.target.value === '' ? undefined : Number(event.target.value))} /></FormControl>
+                          <FormControl><Input inputMode="numeric" placeholder="e.g. 1,00,000" disabled={isSubmitting} value={field.value === '' || field.value == null ? '' : Number(field.value).toLocaleString('en-IN')} onChange={event => { const digits = event.target.value.replace(/,/g, ''); if (/^\d*$/.test(digits)) field.onChange(digits === '' ? undefined : Number(digits)); }} /></FormControl>
+                          <p className="text-xs text-muted-foreground">{Number(field.value) >= 10000000 ? `₹${(Number(field.value) / 10000000).toLocaleString('en-IN')} crore` : Number(field.value) >= 100000 ? `₹${(Number(field.value) / 100000).toLocaleString('en-IN')} lakh` : Number(field.value) > 0 ? `₹${Number(field.value).toLocaleString('en-IN')} rupees` : 'Enter rupees — 1,00,000 = 1 lakh'}</p>
                           <FormMessage />
                         </FormItem>
                       )} />

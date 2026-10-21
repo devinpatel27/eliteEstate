@@ -14,7 +14,7 @@ function canReadAllLeads(permissions: string[]): boolean {
 
 export function useLeadList(initialParams: LeadListParams = {}) {
   const user = useAuthStore((s) => s.user);
-  const [params, setParams] = useState<LeadListParams>({ page: 1, limit: 10, ...initialParams });
+  const [params, setParams] = useState<LeadListParams>({ page: 1, limit: 25, ...initialParams });
 
   const assignedOnly = useMemo(
     () => Boolean(user && !canReadAllLeads(user.permissions ?? [])),

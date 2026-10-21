@@ -31,11 +31,13 @@ export interface ListLeadOptions {
   dateTo?: string;
   nfdFrom?: string;
   nfdTo?: string;
+  parentActivity?: string;
+  childActivity?: string;
   followUpDue?: 'today' | 'tomorrow' | 'overdue';
 }
 
 const populateFields =
-  'customerName mobile alternateMobile email city address category propertyType propertyConfiguration leadSource budgetMin budgetMax preferredArea priority status initialRemark assignedTo currentAssignmentId assignedAt nextFollowUpDate leadId createdAt updatedAt notes sharePreviousRemarks remarksRestrictedAt';
+  'customerName mobile alternateMobile alternateMobiles email city address category propertyType propertyConfiguration leadSource budgetMin budgetMax preferredArea priority status initialRemark assignedTo currentAssignmentId assignedAt nextFollowUpDate leadId createdAt updatedAt notes sharePreviousRemarks remarksRestrictedAt';
 
 export function getScheduleDateRanges(now = new Date()) {
   const offset = 330 * 60 * 1000;
@@ -255,6 +257,7 @@ export const leadRepository = {
         { customerName: searchRegex },
         { mobile: searchRegex },
         { alternateMobile: searchRegex },
+        { alternateMobiles: searchRegex },
         { email: searchRegex },
         { leadId: searchRegex },
         { propertyConfiguration: searchRegex },
@@ -323,6 +326,21 @@ export const leadRepository = {
       if (leadSource) query.leadSource = leadSource;
     }
 
+    if (options.parentActivity || options.childActivity) {
+      const activityQuery: Record<string, unknown> = {};
+      if (options.parentActivity) activityQuery.parentActivity = toObjectId(options.parentActivity);
+      if (options.childActivity) activityQuery.childActivity = toObjectId(options.childActivity);
+      if (options.assignedOnly) {
+        const scoped = await LeadModel.find({assignedTo: toObjectId(options.assignedToUserId), deletedAt: null}).select('_id currentAssignmentId sharePreviousRemarks').lean();
+        activityQuery.$or = [
+          {assignmentId: {$in: scoped.map(item => item.currentAssignmentId).filter(Boolean)}},
+          {leadId: {$in: scoped.filter(item => item.sharePreviousRemarks).map(item => item._id)}},
+        ];
+      }
+      const ids = await LeadFollowUpModel.distinct('leadId', activityQuery);
+      query.$and = [...(Array.isArray(query.$and) ? query.$and : []), { _id: { $in: ids } }];
+    }
+
     if (options.followUpDue) {
       if (!query.status) {
         query.status = { $in: ACTIVE_LEAD_STATUSES };
@@ -382,7 +400,7 @@ export const leadRepository = {
 
   findByMobile: async (mobile: string) => {
     const normalized = normalizeMobile(mobile);
-    const leads = await LeadModel.find({ mobile: normalized, deletedAt: null })
+    const leads = await LeadModel.find({ $or: [{ mobile: normalized }, { alternateMobile: normalized }, { alternateMobiles: normalized }], deletedAt: null })
       .populate('assignedTo', 'name employeeId')
       .populate('propertyType', 'name')
       .populate('leadSource', 'name')
@@ -394,7 +412,7 @@ export const leadRepository = {
   findActiveByMobile: async (mobile: string) => {
     const normalized = normalizeMobile(mobile);
     return LeadModel.findOne({
-      mobile: normalized,
+      $or: [{ mobile: normalized }, { alternateMobile: normalized }, { alternateMobiles: normalized }],
       deletedAt: null,
       status: { $in: ACTIVE_LEAD_STATUSES },
     }).lean();

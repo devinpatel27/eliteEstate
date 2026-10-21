@@ -112,7 +112,11 @@ export const leadService = {
     }
 
     const normalized = normalizeMobile(data.mobile);
-    const activeLead = await leadRepository.findActiveByMobile(normalized);
+    const contactNumbers = [normalized, data.alternateMobile, ...(data.alternateMobiles || [])].filter(Boolean).map(n => normalizeMobile(n!));
+    if (contactNumbers.some(number => !isValidMobile(number))) throw new AppError('Invalid contact number', 400);
+    if (new Set(contactNumbers).size !== contactNumbers.length) throw new AppError('Use a different number for each contact', 400);
+    const matches = await Promise.all(contactNumbers.map(number => leadRepository.findActiveByMobile(number)));
+    const activeLead = matches.find(Boolean);
 
     if (activeLead) {
       throw new AppError('Lead already exists.', 409, {
@@ -128,6 +132,7 @@ export const leadService = {
       leadId,
       customerName: data.customerName,
       mobile: normalized,
+      alternateMobiles: (data.alternateMobiles || []).map(normalizeMobile),
       alternateMobile: data.alternateMobile ? normalizeMobile(data.alternateMobile) : undefined,
       email: data.email?.toLowerCase(),
       city: data.city,
@@ -215,13 +220,15 @@ export const leadService = {
       throw new AppError('Invalid mobile number', 400);
     }
 
-    if (data.mobile) {
-      const normalized = normalizeMobile(data.mobile);
-      const activeLead = await leadRepository.findActiveByMobile(normalized);
-      if (activeLead && activeLead._id.toString() !== id) {
-        throw new AppError('Lead already exists.', 409, { existingLeadId: activeLead._id });
-      }
-      data.mobile = normalized;
+    if (data.mobile !== undefined || data.alternateMobile !== undefined || data.alternateMobiles !== undefined) {
+      const numbers = [data.mobile ?? lead.mobile, data.alternateMobile ?? lead.alternateMobile, ...(data.alternateMobiles ?? lead.alternateMobiles ?? [])].filter(Boolean).map(number => normalizeMobile(number!));
+      if (numbers.some(number => !isValidMobile(number))) throw new AppError('Invalid contact number', 400);
+      if (new Set(numbers).size !== numbers.length) throw new AppError('Use a different number for each contact', 400);
+      const matches = await Promise.all(numbers.map(number => leadRepository.findActiveByMobile(number)));
+      const existing = matches.find(item => item && String(item._id) !== id);
+      if (existing) throw new AppError('Lead already exists.', 409, {existingLeadId: existing._id});
+      if (data.mobile) data.mobile = normalizeMobile(data.mobile);
+      if (data.alternateMobiles) data.alternateMobiles = data.alternateMobiles.map(normalizeMobile);
     }
 
     const updateData: Partial<ILead> = {
@@ -605,12 +612,13 @@ export const leadService = {
       await sendLeadThankYouEmail(lead.customerName, lead.email);
     }
 
-    if (FOLLOW_UP_VISIT_TYPES.includes(data.type as never)) {
+    const visitType = FOLLOW_UP_VISIT_TYPES.includes(data.type as never) ? data.type : /visit/i.test(parentActivity?.name || '') ? 'property_visit' : undefined;
+    if (visitType) {
       await visitService.createFromFollowUp({
         leadId: lead._id,
         assignmentId: lead.currentAssignmentId,
         followUpId: followUp._id,
-        type: data.type as never,
+        type: visitType as never,
         scheduledDate: new Date(data.followUpDate),
         scheduledTime: data.followUpTime,
         remark: data.remark,

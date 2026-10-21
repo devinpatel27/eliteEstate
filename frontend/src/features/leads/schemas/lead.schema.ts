@@ -10,7 +10,8 @@ const mobileSchema = z
 const baseLeadSchema = z.object({
   customerName: z.string().min(2, 'Customer name is required').trim(),
   mobile: mobileSchema,
-  alternateMobile: z.string().optional(),
+  alternateMobile: z.string().refine(value => !value || /^[6-9]\d{9}$/.test(value), 'Enter a valid 10-digit mobile').optional(),
+    alternateMobiles: z.array(z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile').or(z.literal(''))).max(3).optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   city: z.string().optional(),
   address: z.string().optional(),

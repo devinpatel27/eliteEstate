@@ -62,9 +62,9 @@ export function prefetchRouteData(queryClient: QueryClient, href: string) {
   if (href === '/leads') {
     const assignedOnly = Boolean(user && !canReadAllLeads(permissions));
     void queryClient.prefetchQuery({
-      queryKey: ['leads', DEFAULT_LIST, assignedOnly, user?._id],
+      queryKey: ['leads', { ...DEFAULT_LIST, limit: 25 }, assignedOnly, user?._id],
       queryFn: async () => {
-        const res = await leadService.list(DEFAULT_LIST);
+        const res = await leadService.list({ ...DEFAULT_LIST, limit: 25 });
         if (!res.success) throw new Error('Failed to load leads');
         let leads = res.data || [];
         if (assignedOnly && user?._id) {
@@ -83,9 +83,9 @@ export function prefetchRouteData(queryClient: QueryClient, href: string) {
 
   if (href === '/visits') {
     void queryClient.prefetchQuery({
-      queryKey: ['visits', DEFAULT_LIST],
+      queryKey: ['visits', { ...DEFAULT_LIST, limit: 25 }],
       queryFn: async () => {
-        const res = await visitService.list(DEFAULT_LIST);
+        const res = await visitService.list({ ...DEFAULT_LIST, limit: 25 });
         if (!res.success) throw new Error('Failed to load visits');
         return {
           visits: res.data || [],

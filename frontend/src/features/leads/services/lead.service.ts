@@ -1,3 +1,4 @@
+import { notifyLeadVisitChanged } from '@/lib/lead-visit-sync';
 import api from '@/lib/axios';
 import { ApiResponse, PaginatedResponse } from '@/types/api.types';
 import {
@@ -52,21 +53,25 @@ export const leadService = {
 
   create: async (data: CreateLeadData): Promise<ApiResponse<Lead>> => {
     const res = await api.post('/leads', data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   update: async (id: string, data: Partial<Omit<CreateLeadData, 'budgetMin' | 'budgetMax'>> & { budgetMin?: number | null; budgetMax?: number | null }): Promise<ApiResponse<Lead>> => {
     const res = await api.put(`/leads/${id}`, data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   delete: async (id: string): Promise<ApiResponse> => {
     const res = await api.delete(`/leads/${id}`);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   updateStatus: async (id: string, data: { status: string; remark?: string }): Promise<ApiResponse<Lead>> => {
     const res = await api.patch(`/leads/${id}/status`, data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
@@ -76,11 +81,13 @@ export const leadService = {
     remark?: string
   ): Promise<ApiResponse<{ modifiedCount: number; matchedCount: number; status: string }>> => {
     const res = await api.post('/leads/bulk-status', { leadIds, status, remark });
+    notifyLeadVisitChanged();
     return res.data;
   },
 
   transfer: async (id: string, data: { assignedTo: string; transferRemark: string; sharePreviousRemarks?: boolean }): Promise<ApiResponse<Lead>> => {
     const res = await api.post(`/leads/${id}/transfer`, data);
+    notifyLeadVisitChanged();
     return res.data;
   },
 
@@ -91,6 +98,7 @@ export const leadService = {
 
   createFollowUp: async (id: string, data: FollowUpFormValues): Promise<ApiResponse<LeadFollowUp>> => {
     const res = await api.post(`/leads/${id}/follow-ups`, buildFollowUpPayload(data));
+    notifyLeadVisitChanged();
     return res.data;
   },
 
@@ -106,6 +114,7 @@ export const leadService = {
 
   addNote: async (id: string, text: string): Promise<ApiResponse<Lead>> => {
     const res = await api.post(`/leads/${id}/notes`, { text });
+    notifyLeadVisitChanged();
     return res.data;
   },
 };

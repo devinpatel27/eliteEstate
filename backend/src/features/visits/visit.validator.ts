@@ -7,7 +7,7 @@ export const listVisitsSchema = z.object({
     limit: z.string().optional(),
     search: z.string().optional(),
     type: z.enum(VISIT_TYPES as unknown as [string, ...string[]]).optional(),
-    status: z.enum(VISIT_STATUSES as unknown as [string, ...string[]]).optional(),
+    status: z.enum([...VISIT_STATUSES, 'open', 'hold', 'booked', 'closed'] as unknown as [string, ...string[]]).optional(),
     favorite: z.enum(['true', 'false']).optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),

@@ -264,6 +264,7 @@ export function LeadProfile({ lead, onRefresh }: LeadProfileProps) {
           <InfoRow label="Name" value={lead.customerName} />
           <InfoRow label="Mobile" value={lead.mobile} />
           <InfoRow label="Alternate Mobile" value={lead.alternateMobile} />
+          {(lead.alternateMobiles || []).map((number, index) => <InfoRow key={number} label={`Alternate Mobile ${index + 2}`} value={number} />)}
           <InfoRow label="Email" value={lead.email} />
           <InfoRow label="City" value={lead.city} />
           <InfoRow label="Address" value={lead.address} />

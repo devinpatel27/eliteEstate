@@ -353,7 +353,7 @@ export function DataTable<TData, TValue>({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {[10, 20, 50, 100].map((s) => (
+                {[10, 20, 25, 50, 100].map((s) => (
                   <SelectItem key={s} value={String(s)} className="text-xs">
                     {s}
                   </SelectItem>

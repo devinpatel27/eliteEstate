@@ -3,6 +3,7 @@ export interface VisitLead {
   leadId: string;
   customerName: string;
   mobile: string;
+  status?: string;
   assignedTo?: { _id: string; name: string; employeeId?: string };
   assignedAt?: string;
 }
@@ -15,7 +16,7 @@ export interface Visit {
   type: 'property_visit' | 'site_visit' | 'revisit';
   scheduledDate: string;
   scheduledTime?: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled' | 'closed';
   remark?: string;
   isFavorite: boolean;
   source: 'follow_up' | 'manual';

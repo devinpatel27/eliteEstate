@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { CopyPhoneButton } from '@/components/common/CopyPhoneButton';
+import { VisitLeadFollowUp } from './VisitLeadFollowUp';
 import { useState, useEffect } from 'react';
 import { Fragment } from 'react';
 import { ChevronDown, ChevronRight, Eye, Plus, Search, MapPin, Star } from 'lucide-react';
@@ -21,7 +24,7 @@ import { VisitDetailDrawer } from './VisitDetailDrawer';
 import { CreateVisitDialog } from './CreateVisitDialog';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useDebounce } from '@/hooks/useDebounce';
-import { PERMISSIONS, VISIT_TYPES, VISIT_STATUSES } from '@/lib/constants';
+import { PERMISSIONS, VISIT_TYPES, LEAD_STATUSES } from '@/lib/constants';
 import { Visit } from '../types/visit.types';
 import { formatDate, cn } from '@/lib/utils';
 
@@ -58,13 +61,13 @@ function groupVisitsByLead(visits: Visit[]): VisitGroup[] {
       continue;
     }
     existing.visits.push(visit);
-    if (new Date(visit.scheduledDate).getTime() > new Date(existing.latestVisit.scheduledDate).getTime()) {
+    if (new Date(visit.createdAt).getTime() > new Date(existing.latestVisit.createdAt).getTime()) {
       existing.latestVisit = visit;
     }
   }
   return [...map.values()].map((group) => ({
     ...group,
-    visits: group.visits.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()),
+    visits: group.visits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   }));
 }
 
@@ -138,7 +141,7 @@ export function VisitTable() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            {VISIT_STATUSES.map((s) => (
+            {LEAD_STATUSES.map((s) => (
               <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
             ))}
           </SelectContent>
@@ -194,7 +197,7 @@ export function VisitTable() {
               <tr className="bg-muted/40 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <th className="h-11 px-3">Lead / Customer</th>
                 <th className="h-11 px-3">Visits</th>
-                <th className="h-11 px-3">Latest Schedule</th>
+                <th className="h-11 px-3">Latest Visit / Remark</th>
                 <th className="h-11 px-3">Status</th>
                 <th className="h-11 px-3">Assigned</th>
                 <th className="h-11 px-3 text-right">Action</th>
@@ -202,7 +205,7 @@ export function VisitTable() {
             </thead>
             <tbody>
               {isLoading && groups.length === 0 ? (
-                Array.from({ length: params.limit ?? 10 }).map((_, index) => (
+                Array.from({ length: params.limit ?? 25 }).map((_, index) => (
                   <tr key={index} className="border-t border-border/60">
                     {Array.from({ length: 6 }).map((__, cellIndex) => (
                       <td key={cellIndex} className="h-12 px-3">
@@ -239,19 +242,16 @@ export function VisitTable() {
                         )}
                       >
                         <td className="h-14 px-3">
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 text-left"
-                            onClick={() => setOpenGroups((prev) => ({ ...prev, [group.leadKey]: !expanded }))}
-                          >
-                            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          <div className="flex items-center gap-2 text-left">
+                            <button type="button" aria-label="Expand visit history" aria-expanded={expanded} onClick={() => setOpenGroups(prev => ({...prev, [group.leadKey]: !expanded}))}>
+                            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</button>
                             <div>
-                              <p className="font-medium">{group.lead?.customerName || 'Unknown lead'}</p>
+                              <p className="font-medium"><Link href={`/leads/${group.leadKey}`} onClick={event => event.stopPropagation()} className="hover:underline">{group.lead?.customerName || 'Unknown lead'}</Link></p>
                               <p className="text-xs text-muted-foreground">
-                                {group.lead?.leadId || '-'} · {group.lead?.mobile || '-'}
+                                {group.lead?.leadId || '-'} · {group.lead?.mobile || '-'} <CopyPhoneButton number={group.lead?.mobile} />
                               </p>
                             </div>
-                          </button>
+                          </div>
                         </td>
                         <td className="px-3">
                           <div className="flex flex-wrap gap-1.5">
@@ -263,15 +263,18 @@ export function VisitTable() {
                         </td>
                         <td className="px-3 text-xs">
                           <p className="font-medium">{formatDate(group.latestVisit.scheduledDate)}</p>
+                          <p className="max-w-xs whitespace-pre-wrap text-muted-foreground">{group.latestVisit.remark || 'No remark'}</p>
                           {group.latestVisit.scheduledTime && <p className="text-muted-foreground">{group.latestVisit.scheduledTime}</p>}
                         </td>
                         <td className="px-3">
                           <Badge variant={getStatusVariant(group.latestVisit.status)} className="text-[11px] capitalize">
-                            {group.latestVisit.status}
+                            {group.lead?.status || group.latestVisit.status}
                           </Badge>
                         </td>
                         <td className="px-3 text-xs">{group.lead?.assignedTo?.name || 'Unassigned'}</td>
                         <td className="px-3 text-right">
+                          {canFavorite && <Button type="button" variant="ghost" size="icon" aria-label="Favourite visit entry" onClick={() => handleToggleFavorite(group.latestVisit)}><Star className={cn('h-4 w-4', favorite && 'fill-amber-400 text-amber-400')} /></Button>}
+                          <VisitLeadFollowUp visit={group.latestVisit} onSuccess={refetch} />
                           <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5" onClick={() => openVisit(group.latestVisit)}>
                             <Eye className="h-3.5 w-3.5" />
                             Latest
@@ -283,15 +286,11 @@ export function VisitTable() {
                           <td className="px-10 py-2 text-xs text-muted-foreground">{visit.remark || 'No remark'}</td>
                           <td className="px-3 py-2"><Badge variant="outline" className="text-[10px]">{getTypeLabel(visit.type)}</Badge></td>
                           <td className="px-3 py-2 text-xs">{formatDate(visit.scheduledDate)} {visit.scheduledTime || ''}</td>
-                          <td className="px-3 py-2"><Badge variant={getStatusVariant(visit.status)} className="text-[10px] capitalize">{visit.status}</Badge></td>
+                          <td className="px-3 py-2"><Badge variant={getStatusVariant(visit.status)} className="text-[10px] capitalize">{visit.lead?.status || visit.status}</Badge></td>
                           <td className="px-3 py-2 text-xs">{visit.source === 'follow_up' ? 'Follow-up' : 'Manual'}</td>
                           <td className="px-3 py-2 text-right">
                             <div className="inline-flex items-center gap-1">
-                              {canFavorite && (
-                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleToggleFavorite(visit)}>
-                                  <Star className={cn('h-3.5 w-3.5', visit.isFavorite ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/50')} />
-                                </Button>
-                              )}
+
                               <Button type="button" variant="ghost" size="sm" className="h-7" onClick={() => openVisit(visit)}>View</Button>
                             </div>
                           </td>
@@ -306,9 +305,9 @@ export function VisitTable() {
         </div>
         <div className="flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
           <div className="text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{totalCount === 0 ? 0 : ((params.page ?? 1) - 1) * (params.limit ?? 10) + 1}</span> to{' '}
-            <span className="font-medium text-foreground">{Math.min((params.page ?? 1) * (params.limit ?? 10), totalCount)}</span> of{' '}
-            <span className="font-medium text-foreground">{totalCount}</span> visits
+            Showing <span className="font-medium text-foreground">{totalCount === 0 ? 0 : ((params.page ?? 1) - 1) * (params.limit ?? 25) + 1}</span> to{' '}
+            <span className="font-medium text-foreground">{Math.min((params.page ?? 1) * (params.limit ?? 25), totalCount)}</span> of{' '}
+            <span className="font-medium text-foreground">{totalCount}</span> visit entries
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled={(params.page ?? 1) <= 1} onClick={() => updateParams({ page: (params.page ?? 1) - 1 })}>Previous</Button>

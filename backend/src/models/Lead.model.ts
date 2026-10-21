@@ -14,6 +14,7 @@ export interface ILead extends Document {
   customerName: string;
   mobile: string;
   alternateMobile?: string;
+  alternateMobiles?: string[];
   email?: string;
   city?: string;
   address?: string;
@@ -56,6 +57,7 @@ const leadSchema = new Schema<ILead>(
     leadId: { type: String, required: true, unique: true, trim: true },
     customerName: { type: String, required: true, trim: true },
     mobile: { type: String, required: true, trim: true, index: true },
+    alternateMobiles: [{ type: String, trim: true }],
     alternateMobile: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },
     city: { type: String, trim: true },

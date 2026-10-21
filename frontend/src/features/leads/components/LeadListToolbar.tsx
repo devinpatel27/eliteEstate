@@ -1,5 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { masterService } from '../services/master.service';
+import { FollowUpActivity } from '../types/lead.types';
+import { Button } from '@/components/ui/button';
 import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,6 +41,10 @@ export function LeadListToolbar({
   onSearchChange,
   onParamsChange,
 }: LeadListToolbarProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [activities, setActivities] = useState<FollowUpActivity[]>([]);
+  useEffect(() => { masterService.listFollowUpActivities(true).then(res => setActivities(res.data || [])).catch(() => setActivities([])); }, []);
+  const children = activities.find(item => item._id === params.parentActivity)?.children || [];
   const { hasPermission, isReady } = usePermissions();
   const canViewAll = isReady && (hasPermission(PERMISSIONS.WILDCARD) || hasPermission(PERMISSIONS.LEAD_READ));
   const availableStatuses = canViewAll
@@ -59,6 +67,8 @@ export function LeadListToolbar({
 
   return (
     <div className="w-full min-w-0 space-y-2">
+      <Button type="button" variant="outline" size="sm" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}><Filter className="mr-2 h-4 w-4" />{expanded ? 'Hide filters' : 'Filters'}</Button>
+      <div className={expanded ? 'space-y-2' : 'hidden'}>
       <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(180px,1fr)_auto_auto] md:items-center">
         <div className="relative min-w-0">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -154,6 +164,17 @@ export function LeadListToolbar({
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Select value={params.parentActivity || 'all'} onValueChange={value => onParamsChange({parentActivity: value === 'all' ? undefined : value, childActivity: undefined, page: 1})}>
+          <SelectTrigger aria-label="Main follow-up activity"><span>{activities.find(item => item._id === params.parentActivity)?.name || 'All main activities'}</span></SelectTrigger>
+          <SelectContent><SelectItem value="all">All main activities</SelectItem>{activities.map(item => <SelectItem key={item._id} value={item._id}>{item.name}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select disabled={!params.parentActivity} value={params.childActivity || 'all'} onValueChange={value => onParamsChange({childActivity: value === 'all' ? undefined : value, page: 1})}>
+          <SelectTrigger aria-label="Inner follow-up activity"><span>{children.find(item => item._id === params.childActivity)?.name || 'All inner activities'}</span></SelectTrigger>
+          <SelectContent><SelectItem value="all">All inner activities</SelectItem>{children.map(item => <SelectItem key={item._id} value={item._id}>{item.name}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
       </div>
     </div>
   );

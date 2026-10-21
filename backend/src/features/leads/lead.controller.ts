@@ -9,7 +9,7 @@ export const leadController = {
   list: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { page, limit, skip } = getPagination(req);
-      const { search, status, category, priority, propertyType, propertyConfiguration, leadSource, assignedTo, sortBy, sortOrder, dateFrom, dateTo, nfdFrom, nfdTo, followUpDue } =
+      const { search, status, category, priority, propertyType, propertyConfiguration, leadSource, assignedTo, sortBy, sortOrder, dateFrom, dateTo, nfdFrom, nfdTo, followUpDue, parentActivity, childActivity } =
         req.query;
 
       const { data, total } = await leadService.list(req.user!, {
@@ -29,6 +29,8 @@ export const leadController = {
         dateTo: dateTo as string,
         nfdFrom: nfdFrom as string,
         nfdTo: nfdTo as string,
+        parentActivity: parentActivity as string,
+        childActivity: childActivity as string,
         followUpDue: followUpDue as 'today' | 'tomorrow' | 'overdue',
       });
 
