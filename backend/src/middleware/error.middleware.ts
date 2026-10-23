@@ -19,6 +19,16 @@ export const errorMiddleware = (
   res: Response,
   _next: NextFunction
 ): void => {
+  const dbError = err as Error & { code?: string; cause?: { code?: string } };
+  const code = dbError.code || dbError.cause?.code || '';
+  const databaseStack = /pg-pool|mongoose-postgres|node_modules[\\/]pg[\\/]/.test(err.stack || '');
+  const networkCodes = ['ETIMEDOUT', 'ENETUNREACH', 'ECONNREFUSED', 'ECONNRESET', 'EHOSTUNREACH', 'ENOTFOUND', 'EAI_AGAIN'];
+  if (/^08\w{3}$/.test(code) || ['57P01', '57P02', '57P03'].includes(code) || (databaseStack && (networkCodes.includes(code) || /connection timeout|connection terminated|timeout exceeded when trying to connect/i.test(err.message)))) {
+    console.error('PostgreSQL temporarily unavailable:', err);
+    res.setHeader('Retry-After', '5');
+    res.status(503).json({ success: false, message: 'Database temporarily unavailable. Please try again shortly.' });
+    return;
+  }
   if ((err as any).code === 'P0001' && err.message.includes('Employee limit reached')) {
     res.status(409).json({ success: false, message: 'Employee limit reached: maximum 3 employees, excluding Master Admin' });
     return;

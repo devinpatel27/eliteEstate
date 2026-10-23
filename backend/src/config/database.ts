@@ -4,10 +4,10 @@ import { env } from './env';
 const MAX_RETRIES = 5;
 const RETRY_INTERVAL = 5000;
 
-let retries = 0;
-
 export const connectDatabase = async (): Promise<void> => {
   mongoose.set('strictQuery', true);
+  const target = new URL(env.DATABASE_URL);
+  console.log(`PostgreSQL target: ${target.hostname}:${target.port || '5432'}; Node ${process.version}`);
 
   mongoose.connection.on('connected', () => {
     console.log('✅ PostgreSQL connected successfully');
@@ -21,29 +21,25 @@ export const connectDatabase = async (): Promise<void> => {
     console.warn('⚠️  PostgreSQL disconnected');
   });
 
-  const connect = async () => {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await mongoose.connect(env.DATABASE_URL, {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 8000,
         socketTimeoutMS: 45000,
       });
-      retries = 0;
+      return;
     } catch (error) {
-      retries++;
-      console.error(`❌ PostgreSQL connection failed (attempt ${retries}/${MAX_RETRIES}):`, error);
+      console.error(`❌ PostgreSQL connection failed (attempt ${attempt}/${MAX_RETRIES}):`, error);
 
-      if (retries >= MAX_RETRIES) {
-        console.error('❌ Max retries reached. Exiting...');
-        process.exit(1);
+      if (attempt >= MAX_RETRIES) {
+        throw error;
       }
 
       console.log(`🔄 Retrying in ${RETRY_INTERVAL / 1000}s...`);
-      setTimeout(connect, RETRY_INTERVAL);
+      await new Promise<void>(resolve => setTimeout(resolve, RETRY_INTERVAL));
     }
-  };
-
-  await connect();
+  }
 };
 
 export const disconnectDatabase = async (): Promise<void> => {

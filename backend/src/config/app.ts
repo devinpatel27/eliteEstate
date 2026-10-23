@@ -17,9 +17,11 @@ import { amenityRoutes } from '../features/amenities/amenity.routes';
 import { settingsRoutes } from '../features/settings/settings.routes';
 import { publicRoutes } from '../features/public/public.routes';
 import { reportRoutes } from '../features/reports/reports.routes';
+import mongoose from 'mongoose';
 
 export const createApp = (): Application => {
   const app = express();
+  app.locals.databaseReady = false;
 
   app.use(
     helmet({
@@ -63,6 +65,15 @@ export const createApp = (): Application => {
 
   app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
 
+  app.use('/api', (_req, res, next) => {
+    if (!app.locals.databaseReady || mongoose.connection.readyState !== 1) {
+      res.setHeader('Retry-After', '5');
+      res.status(503).json({ success: false, message: 'Database temporarily unavailable. Please try again shortly.' });
+      return;
+    }
+    next();
+  });
+
   app.use('/api/auth', authRoutes);
   app.use('/api/employees', employeeRoutes);
   app.use('/api/roles', roleRoutes);
@@ -89,7 +100,13 @@ export const createApp = (): Application => {
   });
 
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    const ready = Boolean(app.locals.databaseReady && mongoose.connection.readyState === 1);
+    res.json({ status: 'ok', database: ready ? 'ready' : 'unavailable', timestamp: new Date().toISOString() });
+  });
+
+  app.get('/ready', (_req, res) => {
+    const ready = Boolean(app.locals.databaseReady && mongoose.connection.readyState === 1);
+    res.status(ready ? 200 : 503).json({ success: ready, database: ready ? 'ready' : 'unavailable' });
   });
 
   app.use((_req, res) => {

@@ -7,6 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "db:check": "node scripts/check-database.cjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc --pretty false",
     "prestart": "tsc --pretty false",

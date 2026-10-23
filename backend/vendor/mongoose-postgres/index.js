@@ -282,8 +282,25 @@ function createModel(name, schema = new Schema()) {
   return Model;
 }
 
-async function connect(uri) {
-  pool = new Pool({ connectionString: uri, ssl: { rejectUnauthorized: false }, max: 5 });
+async function connect(uri, options = {}) {
+  if (pool) await pool.end();
+  connection.readyState = 2;
+  const candidate = new Pool({
+    connectionString: uri,
+    ssl: { rejectUnauthorized: false },
+    max: options.maxPoolSize ?? 5,
+    connectionTimeoutMillis: options.serverSelectionTimeoutMS ?? 10000,
+    statement_timeout: options.socketTimeoutMS ?? 45000,
+    idleTimeoutMillis: 30000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
+  });
+  pool = candidate;
+  candidate.on('error', (error) => {
+    if (connection.listenerCount('error')) connection.emit('error', error);
+    else console.error('PostgreSQL idle connection error:', error);
+  });
+  try {
   await pool.query(`CREATE TABLE IF NOT EXISTS crm_documents (
     collection text NOT NULL,
     id text NOT NULL,
@@ -315,10 +332,18 @@ async function connect(uri) {
   connection.db = null;
   connection.emit('connected');
   return module.exports;
+  } catch (error) {
+    connection.readyState = 0;
+    pool = undefined;
+    await candidate.end().catch(() => {});
+    throw error;
+  }
 }
 
 async function disconnect() {
-  if (pool) await pool.end();
+  const current = pool;
+  pool = undefined;
+  if (current) await current.end();
   connection.readyState = 0;
   cache.clear();
   connection.emit('disconnected');

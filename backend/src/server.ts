@@ -1,5 +1,5 @@
 import { createApp } from './config/app';
-import { connectDatabase } from './config/database';
+import { connectDatabase, disconnectDatabase } from './config/database';
 import { env } from './config/env';
 import { syncIndexes } from './scripts/syncIndexes';
 import { seedAdmin } from './scripts/seedAdmin';
@@ -22,15 +22,21 @@ const startServer = async (): Promise<void> => {
       await syncIndexes();
       await seedAdmin();
       await seedMasters();
+      app.locals.databaseReady = true;
       console.log('✅ Database connected and initialized successfully');
     })
     .catch((dbError) => {
       console.error('❌ Database connection or seeding error:', dbError);
+      app.locals.databaseReady = false;
+      server.close();
+      void disconnectDatabase().finally(() => process.exit(1));
     });
 
   const shutdown = async (signal: string) => {
     console.log(`\n${signal} received. Shutting down gracefully...`);
-    server.close(() => {
+    app.locals.databaseReady = false;
+    server.close(async () => {
+      await disconnectDatabase();
       console.log('✅ HTTP server closed');
       process.exit(0);
     });
