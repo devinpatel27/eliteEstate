@@ -30,8 +30,9 @@ interface LeadTableProps {
   onCreateLead?: () => void;
 }
 
-function buildLeadQueryString(params: Pick<LeadListParams, 'followUpDue' | 'status' | 'priority' | 'nfdFrom' | 'nfdTo'>) {
+function buildLeadQueryString(params: Pick<LeadListParams, 'followUpDue' | 'status' | 'priority' | 'nfdFrom' | 'nfdTo' | 'freshOnly'>) {
   const q = new URLSearchParams();
+  if (params.freshOnly) q.set('freshOnly', 'true');
   if (params.followUpDue) q.set('followUpDue', params.followUpDue);
   if (params.status && params.status !== 'open') q.set('status', params.status);
   if (params.priority) q.set('priority', params.priority);
@@ -47,12 +48,14 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
   const { hasPermission, canViewAllLeads, isReady } = usePermissions();
   const initialFollowUpDue = searchParams.get('followUpDue') as 'today' | 'tomorrow' | 'overdue' | null;
   const initialStatus = searchParams.get('status') || 'open';
+  const initialFreshOnly = searchParams.get('freshOnly') === 'true' || initialStatus === 'new';
   const initialPriority = searchParams.get('priority') || undefined;
   const initialNfdFrom = searchParams.get('nfdFrom') || undefined;
   const initialNfdTo = searchParams.get('nfdTo') || undefined;
   const { leads, totalCount, pageCount, isLoading, params, updateParams, refetch } = useLeadList({
     followUpDue: initialFollowUpDue || undefined,
-    status: initialStatus,
+    status: initialStatus === 'new' ? 'open' : initialStatus,
+    freshOnly: initialFreshOnly,
     priority: initialPriority,
     nfdFrom: initialNfdFrom,
     nfdTo: initialNfdTo,
@@ -91,7 +94,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
   };
 
   const syncUrl = useCallback(
-    (next: Pick<LeadListParams, 'followUpDue' | 'status' | 'priority' | 'nfdFrom' | 'nfdTo'>) => {
+    (next: Pick<LeadListParams, 'followUpDue' | 'status' | 'priority' | 'nfdFrom' | 'nfdTo' | 'freshOnly'>) => {
       const qs = buildLeadQueryString(next);
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
@@ -102,6 +105,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
     (updates: Partial<LeadListParams>) => {
       updateParams(updates);
       const next = {
+        freshOnly: updates.freshOnly ?? params.freshOnly,
         followUpDue: updates.followUpDue !== undefined ? updates.followUpDue : params.followUpDue,
         status: updates.status !== undefined ? updates.status : params.status,
         priority: updates.priority !== undefined ? updates.priority : params.priority,
@@ -109,7 +113,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
         nfdTo: updates.nfdTo !== undefined ? updates.nfdTo : params.nfdTo,
       };
       if (
-        updates.followUpDue !== undefined ||
+        updates.freshOnly !== undefined || updates.followUpDue !== undefined ||
         updates.status !== undefined ||
         updates.priority !== undefined ||
         updates.nfdFrom !== undefined ||
@@ -118,17 +122,20 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
         syncUrl(next);
       }
     },
-    [updateParams, params.followUpDue, params.status, params.priority, params.nfdFrom, params.nfdTo, syncUrl]
+    [updateParams, params.freshOnly, params.followUpDue, params.status, params.priority, params.nfdFrom, params.nfdTo, syncUrl]
   );
 
   useEffect(() => {
     const followUpDue = searchParams.get('followUpDue') as 'today' | 'tomorrow' | 'overdue' | null;
-    const status = searchParams.get('status') || 'open';
+    const rawStatus = searchParams.get('status') || 'open';
+    const status = rawStatus === 'new' ? 'open' : rawStatus;
+    const freshOnly = searchParams.get('freshOnly') === 'true' || rawStatus === 'new';
     const priority = searchParams.get('priority') || undefined;
     const nfdFrom = searchParams.get('nfdFrom') || undefined;
     const nfdTo = searchParams.get('nfdTo') || undefined;
 
     updateParams({
+      freshOnly,
       followUpDue: followUpDue || undefined,
       status,
       priority,
@@ -168,6 +175,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
 
   const clearFilters = () => {
     updateParams({
+      freshOnly: false,
       parentActivity: undefined,
       childActivity: undefined,
       followUpDue: undefined,
@@ -185,7 +193,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
   };
 
   const hasActiveFilter = Boolean(
-    params.parentActivity || params.childActivity || params.followUpDue ||
+    params.freshOnly || params.parentActivity || params.childActivity || params.followUpDue ||
     (params.status && params.status !== 'open') ||
     params.priority ||
     params.category ||
@@ -228,6 +236,7 @@ export function LeadTable({ onCreateLead }: LeadTableProps) {
       {hasActiveFilter && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 px-4 py-2.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Active filters</span>
+          {params.freshOnly && <Badge variant="secondary">Fresh: no follow-ups</Badge>}
           {params.status && (
             <Badge variant="secondary" className="gap-1 capitalize">
               Status: {formatLeadStatus(params.status)}

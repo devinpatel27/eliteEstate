@@ -78,6 +78,7 @@ export const listLeadsSchema = z.object({
     parentActivity: z.string().optional(),
     childActivity: z.string().optional(),
     followUpDue: z.enum(['today', 'tomorrow', 'overdue']).optional(),
+    freshOnly: z.enum(['true', 'false']).optional(),
   }),
 });
 

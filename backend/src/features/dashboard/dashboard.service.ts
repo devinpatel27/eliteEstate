@@ -9,6 +9,7 @@ import { canReadAllLeads, requiresAssignedOnlyScope } from '../leads/lead.access
 import { ACTIVE_LEAD_STATUSES } from '../../constants/lead.constants';
 import { isValidObjectId, toObjectId, resolveRefId } from '../../utils/objectId.utils';
 import { PERMISSIONS } from '../../constants/permissions';
+import { buildFreshLeadFilter } from '../leads/lead.fresh';
 import { buildFollowUpDueClause, getScheduleDateRanges } from '../leads/lead.repository';
 
 type DateBucket = 'today' | 'tomorrow' | 'due';
@@ -197,7 +198,7 @@ export const dashboardService = {
       coldLeads,
       ...bucketResults
     ] = await Promise.all([
-      LeadModel.countDocuments({ ...leadFilter, status: 'open' }),
+      buildFreshLeadFilter(leadFilter).then(filter => LeadModel.countDocuments(filter)),
       LeadModel.countDocuments({ ...leadFilter, priority: 'hot', status: { $in: ACTIVE_LEAD_STATUSES } }),
       LeadModel.countDocuments({ ...leadFilter, priority: 'warm', status: { $in: ACTIVE_LEAD_STATUSES } }),
       LeadModel.countDocuments({ ...leadFilter, priority: 'cold', status: { $in: ACTIVE_LEAD_STATUSES } }),
@@ -309,11 +310,12 @@ export const dashboardService = {
         await Promise.all(
           (Object.keys(PERFORMANCE_GROUPS) as (keyof typeof PERFORMANCE_GROUPS)[]).map(
             async (key) => {
-              metrics[key] = await LeadModel.countDocuments({
+              const filter = {
                 deletedAt: null,
                 assignedTo,
                 status: { $in: PERFORMANCE_GROUPS[key] },
-              });
+              };
+              metrics[key] = await LeadModel.countDocuments(key === 'newEnquiry' ? await buildFreshLeadFilter({deletedAt: null, assignedTo}) : filter);
             }
           )
         );

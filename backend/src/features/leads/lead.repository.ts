@@ -9,6 +9,7 @@ import { UserModel } from '../../models/User.model';
 import { ACTIVE_LEAD_STATUSES } from '../../constants/lead.constants';
 import { LEAD_STATUS_BUCKETS } from '../../constants/lead.constants';
 import { normalizeMobile } from '../../utils/mobile.utils';
+import { buildFreshLeadFilter } from './lead.fresh';
 import { enrichLeadDetail, enrichLeads } from '../../utils/leadPopulate.utils';
 import { isValidObjectId, toObjectId } from '../../utils/objectId.utils';
 
@@ -34,6 +35,7 @@ export interface ListLeadOptions {
   parentActivity?: string;
   childActivity?: string;
   followUpDue?: 'today' | 'tomorrow' | 'overdue';
+  freshOnly?: boolean;
 }
 
 const populateFields =
@@ -358,6 +360,8 @@ export const leadRepository = {
       }
       applyScheduleDueFilter(query, scheduleConditions);
     }
+
+    if (options.freshOnly) Object.assign(query, await buildFreshLeadFilter(query));
 
     const sortFieldMap: Record<string, string> = {
       customer: 'customerName',

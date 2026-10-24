@@ -137,7 +137,7 @@ export function DashboardKpiStrip({ overview, isLoading }: DashboardKpiStripProp
     <div className="space-y-3">
       {/* Fresh leads — standout strip */}
       <Link
-        href="/leads?status=new"
+        href="/leads?freshOnly=true"
         className="group flex items-center justify-between gap-4 rounded-xl border border-emerald-200/80 bg-gradient-to-r from-emerald-500/10 via-emerald-50/80 to-transparent px-4 py-3 transition duration-200 hover:border-emerald-300 hover:shadow-md dark:border-emerald-800/60 dark:from-emerald-950/50 dark:via-emerald-950/30 dark:to-transparent dark:hover:border-emerald-700"
       >
         <div className="flex items-center gap-3">
@@ -149,6 +149,7 @@ export function DashboardKpiStrip({ overview, isLoading }: DashboardKpiStripProp
               {getFreshLabel(viewMode)}
             </p>
             <p className="text-3xl font-bold tabular-nums text-emerald-800 dark:text-emerald-300">{freshLeads}</p>
+            <p className="text-xs text-emerald-700 dark:text-emerald-400">No follow-ups added yet</p>
           </div>
         </div>
         <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition group-hover:bg-emerald-500/20 dark:text-emerald-400">

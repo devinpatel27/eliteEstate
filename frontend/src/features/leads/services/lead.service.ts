@@ -32,6 +32,7 @@ function buildFollowUpPayload(data: FollowUpFormValues): Record<string, string> 
 export const leadService = {
   list: async (params: LeadListParams): Promise<PaginatedResponse<Lead>> => {
     const cleanParams: Record<string, unknown> = { ...params };
+    if (cleanParams.status === 'new') { cleanParams.status = 'open'; cleanParams.freshOnly = true; }
     if (cleanParams.status === 'all') delete cleanParams.status;
     if (cleanParams.priority === 'all') delete cleanParams.priority;
     if (cleanParams.category === 'all') delete cleanParams.category;

@@ -111,6 +111,7 @@ export interface LeadListParams {
   parentActivity?: string;
   childActivity?: string;
   followUpDue?: 'today' | 'tomorrow' | 'overdue';
+  freshOnly?: boolean;
 }
 
 export interface CreateLeadData {

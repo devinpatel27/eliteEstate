@@ -15,6 +15,7 @@ export const leadController = {
       const { data, total } = await leadService.list(req.user!, {
         skip,
         limit,
+        freshOnly: req.query.freshOnly === 'true',
         search: search as string,
         status: status as string,
         category: category as string,

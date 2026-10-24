@@ -63,9 +63,10 @@ export function DashboardHeroCards({ overview, isLoading }: DashboardHeroCardsPr
               {getFreshLeadsLabel(viewMode, employeeName)}
             </p>
             <p className="mt-2 text-5xl font-bold tabular-nums">{overview.freshLeads}</p>
+            <p className="mt-1 text-sm text-white/80">No follow-ups added yet</p>
           </div>
           <Link
-            href="/leads?status=new"
+            href="/leads?freshOnly=true"
             className="inline-flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold transition hover:bg-white/25 hover:shadow-md sm:self-auto"
           >
             View new leads <ArrowRight className="h-4 w-4" />

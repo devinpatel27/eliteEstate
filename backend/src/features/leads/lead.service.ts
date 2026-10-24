@@ -1,6 +1,7 @@
 import { FilterQuery, Types } from 'mongoose';
 import { assertValidAssignee } from './lead.assignment';
 import { leadRepository, getScheduleDateRanges } from './lead.repository';
+import { buildFreshLeadFilter } from './lead.fresh';
 import {
   getLeadAccessScope,
   isLeadAdmin,
@@ -746,7 +747,7 @@ export const leadService = {
       closedLost,
     ] = await Promise.all([
       leadRepository.countByFilter(baseFilter),
-      leadRepository.countByFilter({ ...baseFilter, status: 'open' }),
+      buildFreshLeadFilter(baseFilter).then(filter => leadRepository.countByFilter(filter)),
       leadRepository.countByFilter({
         ...baseFilter,
         priority: 'hot',
