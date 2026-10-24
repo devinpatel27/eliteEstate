@@ -8,10 +8,10 @@
   },
   "scripts": {
     "db:check": "node scripts/check-database.cjs",
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc --pretty false",
+    "dev": "node api.js && tsx watch src/server.ts",
+    "build": "node api.js && tsc --pretty false",
     "prestart": "tsc --pretty false",
-    "start": "node dist/server.js",
+    "start": "node api.js && node dist/server.js",
     "postinstall": "tsc --pretty false",
     "render:build": "npm ci --include=dev --include=optional && npm run build",
     "render:start": "npm run render:build && npm start",

@@ -1,3 +1,5 @@
+import { buildMonthlyTrend } from './reports.trend';
+import { buildFreshLeadFilter } from '../leads/lead.fresh';
 import { JwtPayload } from '../../types/api.types';
 import { LeadModel } from '../../models/Lead.model';
 import { VisitModel } from '../../models/Visit.model';
@@ -105,7 +107,7 @@ export const reportsService = {
       closedLost,
     ] = await Promise.all([
       LeadModel.countDocuments(leadMatch),
-      countLeads(filters, scope, { status: 'open' }),
+      buildFreshLeadFilter(leadMatch).then(match => LeadModel.countDocuments(match)),
       countLeads(filters, scope, { status: 'open' }),
       countLeads(filters, scope, { status: 'pending' }),
       countLeads(filters, scope, { priority: 'hot', status: { $in: ACTIVE_LEAD_STATUSES } }),
@@ -145,26 +147,15 @@ export const reportsService = {
       count: sourcePerformance[name] || 0,
     }));
 
-    const twelveMonthsAgo = new Date();
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
-    twelveMonthsAgo.setDate(1);
-    twelveMonthsAgo.setHours(0, 0, 0, 0);
-
-    const monthlyAgg = await LeadModel.aggregate([
-      { $match: { ...leadMatch, createdAt: { $gte: twelveMonthsAgo } } },
-      {
-        $group: {
-          _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
     const monthTemplate = getLast12Months();
-    const monthlyTrend = monthTemplate.map(({ year, month, label }) => {
-      const found = monthlyAgg.find((m) => m._id.year === year && m._id.month === month);
-      return { label, year, month, count: found?.count ?? 0 };
-    });
+    const firstMonth = monthTemplate[0];
+    const twelveMonthsAgo = new Date(Date.UTC(firstMonth.year, firstMonth.month - 1, 1));
+    // The PostgreSQL adapter does not support compound $year/$month grouping.
+    // Keep the original report scope/date range instead of overwriting its date field.
+    const trendRows = await LeadModel.find({
+      $and: [leadMatch, { createdAt: { $gte: twelveMonthsAgo } }],
+    }).select('createdAt').lean();
+    const monthlyTrend = buildMonthlyTrend(trendRows.map((row: { createdAt?: Date | string }) => row.createdAt), monthTemplate);
 
     return {
       kpis: {
@@ -378,26 +369,15 @@ export const reportsService = {
       }))
     );
 
-    const twelveMonthsAgo = new Date();
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
-    twelveMonthsAgo.setDate(1);
-    twelveMonthsAgo.setHours(0, 0, 0, 0);
-
-    const monthlyAgg = await VisitModel.aggregate([
-      { $match: { ...visitMatch, scheduledDate: { $gte: twelveMonthsAgo } } },
-      {
-        $group: {
-          _id: { year: { $year: '$scheduledDate' }, month: { $month: '$scheduledDate' } },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
     const monthTemplate = getLast12Months();
-    const monthlyTrend = monthTemplate.map(({ year, month, label }) => {
-      const found = monthlyAgg.find((m) => m._id.year === year && m._id.month === month);
-      return { label, year, month, count: found?.count ?? 0 };
-    });
+    const firstMonth = monthTemplate[0];
+    const twelveMonthsAgo = new Date(Date.UTC(firstMonth.year, firstMonth.month - 1, 1));
+    // The PostgreSQL adapter does not support compound $year/$month grouping.
+    // Keep the original report scope/date range instead of overwriting its date field.
+    const trendRows = await VisitModel.find({
+      $and: [visitMatch, { scheduledDate: { $gte: twelveMonthsAgo } }],
+    }).select('scheduledDate').lean();
+    const monthlyTrend = buildMonthlyTrend(trendRows.map((row: { scheduledDate?: Date | string }) => row.scheduledDate), monthTemplate);
 
     return {
       kpis: {
